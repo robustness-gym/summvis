@@ -69,7 +69,7 @@ python preprocessing.py \
 ```
 
 ## Running SummVis
-Finally, we're ready to run the Streamlit app. Once the app loads, make it's pointing to the right `File` at the top
+Finally, we're ready to run the Streamlit app. Once the app loads, make sure it's pointing to the right `File` at the top
 of the interface.
 ```shell
 streamlit run summvis.py
