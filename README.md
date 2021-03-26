@@ -80,7 +80,7 @@ streamlit run summvis.py -- --path your/path/to/data
 ```
 Note that the additional `--` is not a mistake, and is required to pass command-line arguments in streamlit.
 
-## End-to-end Preprocessing
+## Get your data into SummVis: end-to-end preprocessing
 You can also perform preprocessing end-to-end to load any summarization dataset or model predictions into SummVis. 
 Instructions for this are provided below. 
 
