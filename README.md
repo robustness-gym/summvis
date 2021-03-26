@@ -18,7 +18,7 @@ Follow the steps below to start using SummVis immediately.
 #### Download and extract data
 Download our pre-cached dataset that contains predictions for state-of-the-art models such as Pegasus and BART on 
 1000 examples taken from the CNN-Dailymail validation set.
-```shell script
+```shell
 mkdir data
 mkdir preprocessing
 curl https://storage.googleapis.com/sfr-summvis-data-research/cnn_dailymail_1000.anonymized.zip --output preprocessing/cnn_dailymail_1000.anonymized.zip
@@ -32,7 +32,7 @@ is omitted for copyright reasons). The `preprocessing.py` script can be used for
 ##### Option 1: Deanonymize all 1000 examples in the provided CNN-Dailymail data.
 Takes around `2` minutes on a MacBook Pro.
 
-```shell script
+```shell
 python preprocessing.py \
 --deanonymize \
 --dataset_rg preprocessing/cnn_dailymail_1000.anonymized \
@@ -45,7 +45,7 @@ python preprocessing.py \
 ##### Option 2 (`try_it`): Deanonymize a sample of the provided CNN-Dailymail data.
 Takes around `20` seconds on a MacBook Pro.
 
-```shell script
+```shell
 python preprocessing.py \
 --deanonymize \
 --dataset_rg preprocessing/cnn_dailymail_1000.anonymized \
@@ -57,7 +57,7 @@ python preprocessing.py \
 ```
 
 #### Option 3 (`n_samples`): Deanonymize a fixed number of examples (e.g. 50) in the provided CNN-Dailymail data.
-```shell script
+```shell
 python preprocessing.py \
 --deanonymize \
 --dataset_rg preprocessing/cnn_dailymail_1000.anonymized \
@@ -71,11 +71,11 @@ python preprocessing.py \
 ## Running SummVis
 Finally, we're ready to run the Streamlit app. Once the app loads, make it's pointing to the right `File` at the top
 of the interface.
-```shell script
+```shell
 streamlit run summvis.py
 ```
 Alternately, if you need to point SummVis to a folder where your data is stored.
-```shell script
+```shell
 streamlit run summvis.py -- --path your/path/to/data
 ```
 Note that the additional `--` is not a mistake, and is required to pass command-line arguments in streamlit.
@@ -89,7 +89,7 @@ Loads in a dataset from HF, or any dataset that you have and stores it in a
 standardized format with columns for `document` and `summary:reference`.  
 
 #### Example: Save CNN-Dailymail validation split to disk as a jsonl file.
-```shell script
+```shell
 python preprocessing.py \
 --standardize \
 --dataset cnn_dailymail \
@@ -99,7 +99,7 @@ python preprocessing.py \
 ```
 
 #### Example: Load custom `my_dataset.jsonl`, standardize and save.
-```shell script
+```shell
 python preprocessing.py \
 --standardize \
 --dataset_jsonl path/to/my_dataset.jsonl \
@@ -113,7 +113,7 @@ Takes a saved dataset that has already been standardized and adds predictions to
 from prediction jsonl files. 
 
 #### Example: Add 6 prediction files for Pegasus and BART to the dataset.
-```shell script
+```shell
 python preprocessing.py \
 --join_predictions \
 --dataset_jsonl preprocessing/cnn_dailymail_v3_validation.jsonl \
@@ -133,7 +133,7 @@ Applies all the preprocessing steps to it, and stores the processed dataset back
 disk.
 
 #### Example: Autorun with default settings on a few examples to try it.
-```shell script
+```shell
 python preprocessing.py \
 --workflow \
 --dataset_jsonl preprocessing/cnn_dailymail_v3_validation.jsonl \
@@ -142,7 +142,7 @@ python preprocessing.py \
 ```
 
 #### Example: Autorun with default settings on all examples.
-```shell script
+```shell
 python preprocessing.py \
 --workflow \
 --dataset_jsonl preprocessing/cnn_dailymail_v3_validation.jsonl \
