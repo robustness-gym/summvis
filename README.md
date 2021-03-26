@@ -95,7 +95,7 @@ python preprocessing.py \
 --dataset cnn_dailymail \
 --version 3.0.0 \
 --split validation \
---save_jsonl_path preprocessing/cnn_dailymail_v3_validation.jsonl \
+--save_jsonl_path preprocessing/cnn_dailymail_v3_validation.jsonl
 ```
 
 #### Example: Load custom `my_dataset.jsonl`, standardize and save.
@@ -105,7 +105,7 @@ python preprocessing.py \
 --dataset_jsonl path/to/my_dataset.jsonl \
 --doc_column name_of_document_column \
 --reference_column name_of_reference_summary_column \
---save_jsonl_path preprocessing/my_dataset.jsonl \
+--save_jsonl_path preprocessing/my_dataset.jsonl
 ```
 
 ### 2. Add predictions to the saved dataset.
