@@ -129,8 +129,8 @@ anonymized/pegasus-xsum.cnndm.validation.results.anonymized \
 
 ### 3. Run the preprocessing workflow and save the dataset.
 Takes a saved dataset that has been standardized, and predictions already added. 
-Applies all the preprocessing steps to it, and stores the processed dataset back to 
-disk.
+Applies all the preprocessing steps to it (running `spaCy`, lexical and semantic aligners), 
+and stores the processed dataset back to disk.
 
 #### Example: Autorun with default settings on a few examples to try it.
 ```shell
