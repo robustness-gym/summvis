@@ -30,7 +30,8 @@ class BertscoreAligner():
         self.model = scorer._model
         self._device = self.model.device
         self.baseline_val = scorer.baseline_vals[2].item()
-        self.tokenizer = AutoTokenizer.from_pretrained("roberta-large", add_prefix_space=True)
+        self.tokenizer = AutoTokenizer.from_pretrained("roberta-large", add_prefix_space=False)
+        self.tokenizer_add_prefix = AutoTokenizer.from_pretrained("roberta-large", add_prefix_space=True)
 
     def align(
         self,
@@ -87,8 +88,15 @@ class BertscoreAligner():
         for sent in sents:
             token_alignment = []
             roberta_next_index = 0
-            for token in sent:
-                n_roberta_tokens = len(self.tokenizer.tokenize(token.text))
+            for i, token in enumerate(sent):
+                # "Tokenize" each word individually, so as to track the alignment between spaCy/HF tokens
+                if i == 0:
+                    # The first token in the sentence is not prefixed by a space. Adding prefix to this can cause
+                    # unexpected behavior is this is OOD
+                    tokenizer = self.tokenizer
+                else:
+                    tokenizer = self.tokenizer_add_prefix
+                n_roberta_tokens = len(tokenizer.tokenize(token.text))
                 token_alignment.append(list(range(roberta_next_index, roberta_next_index + n_roberta_tokens)))
                 roberta_next_index += n_roberta_tokens
             token_alignments.append(token_alignment)
