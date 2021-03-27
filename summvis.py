@@ -3,7 +3,6 @@ import json
 import operator
 import os
 import re
-import time
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -18,6 +17,8 @@ from align import BertscoreAligner, NGramAligner, StaticEmbeddingAligner
 from components import main_view
 from preprocessing import _spacy_decode, NGramAlignerCap, StaticEmbeddingAlignerCap, \
     BertscoreAlignerCap
+
+MIN_SEMANTIC_SIM_THRESHOLD = 0.1
 
 nlp = spacy.load("en_core_web_lg")
 
@@ -167,8 +168,13 @@ def preprocess_text(text):
     return ' '.join(re.findall(rf"[\w']+|[{split_punct}]", text))
 
 
-def normalize(token):
-    return token.lemma_.lower()
+def filter_alignment(alignment, threshold):
+    filtered_alignment = {}
+    for k, v in alignment.items():
+        filtered_matches = [(match_idx, score) for match_idx, score in v if score >= threshold]
+        if filtered_matches:
+            filtered_alignment[k] = filtered_matches
+    return filtered_alignment
 
 
 def select_comparison(example):
@@ -212,14 +218,14 @@ def show_main(example):
 
     semantic_sim_type = st.sidebar.radio(
         "Semantic similarity type:",
-        ["Static embedding", "Contextual embedding"]
+        ["Contextual embedding", "Static embedding"]
     )
     semantic_sim_threshold = st.sidebar.slider(
         "Semantic similarity threshold:",
-        min_value=0.0,
+        min_value=MIN_SEMANTIC_SIM_THRESHOLD,
         max_value=1.0,
         step=0.1,
-        value=0.1,
+        value=0.3,
     )
     semantic_sim_top_k = st.sidebar.selectbox(label="Max top-k semantic sim",
                                               options=list(range(1, 11)), index=9)
@@ -257,7 +263,7 @@ def show_main(example):
                 StaticEmbeddingAlignerCap.decode(
                     example.data[
                         Identifier(StaticEmbeddingAlignerCap.__name__)(
-                            threshold=semantic_sim_threshold,
+                            threshold=MIN_SEMANTIC_SIM_THRESHOLD,
                             top_k=semantic_sim_top_k,
                             columns=[
                                 f'preprocessed_{document._.column}',
@@ -274,13 +280,18 @@ def show_main(example):
                 document,
                 summaries
             )
+        else:
+            semantic_alignments = [
+                filter_alignment(alignment, semantic_sim_threshold)
+                for alignment in semantic_alignments
+            ]
     else:
         try:
             semantic_alignments = [
                 BertscoreAlignerCap.decode(
                     example.data[
                         Identifier(BertscoreAlignerCap.__name__)(
-                            threshold=semantic_sim_threshold,
+                            threshold=MIN_SEMANTIC_SIM_THRESHOLD,
                             top_k=semantic_sim_top_k,
                             columns=[
                                 f'preprocessed_{document._.column}',
@@ -294,6 +305,11 @@ def show_main(example):
             semantic_alignments = BertscoreAligner(semantic_sim_threshold,
                                                    semantic_sim_top_k).align(document,
                                                                              summaries)
+        else:
+            semantic_alignments = [
+                filter_alignment(alignment, semantic_sim_threshold)
+                for alignment in semantic_alignments
+            ]
 
     show_html(
         *main_view(
