@@ -39,7 +39,8 @@ python preprocessing.py \
 --dataset cnn_dailymail \
 --version 3.0.0 \
 --split validation \
---processed_dataset_path data/full:cnn_dailymail_1000
+--processed_dataset_path data/full:cnn_dailymail_1000 \
+--n_samples 1000
 ```
 
 ##### Option 2 (`try_it`): Deanonymize a sample of the provided CNN-Dailymail data.
