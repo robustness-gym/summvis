@@ -1,6 +1,6 @@
-# import streamlit as st
 import heapq
 import itertools
+from abc import ABC, abstractmethod
 from collections import defaultdict
 from operator import itemgetter
 from typing import List, Dict, Tuple
@@ -9,29 +9,84 @@ from typing import Sequence
 import numpy as np
 import torch
 from bert_score import BERTScorer
+from nltk import PorterStemmer
 from spacy.tokens import Doc, Span
-from spacy.tokens import Token
 from toolz import itertoolz
 from transformers import AutoTokenizer
+from transformers.tokenization_utils_base import PaddingStrategy
 
-from nltk import PorterStemmer
+
+class EmbeddingModel(ABC):
+    @abstractmethod
+    def embed(
+        self,
+        sents: List[Span]
+    ):
+        pass
 
 
-class BertscoreAligner():
+class ContextualEmbedding(EmbeddingModel):
+
+    def __init__(self, model, tokenizer_name, max_length):
+        self.model = model
+        self.tokenizer = SpacyHuggingfaceTokenizer(tokenizer_name, max_length)
+        self._device = model.device
+
+    def embed(
+        self,
+        sents: List[Span]
+    ):
+        encoded_input, special_tokens_masks, token_alignments = self.tokenizer.batch_encode(sents)
+        encoded_input = {k: v.to(self._device) for k, v in encoded_input.items()}
+        with torch.no_grad():
+            model_output = self.model(**encoded_input)
+            embeddings = model_output[0].cpu()
+
+        spacy_embs_list = []
+        for embs, mask, token_alignment \
+            in zip(embeddings, special_tokens_masks, token_alignments):
+            mask = torch.tensor(mask)
+            embs = embs[mask == 0]  # Filter embeddings at special token positions
+            spacy_embs = []
+            for hf_idxs in token_alignment:
+                if hf_idxs is None:
+                    pooled_embs = torch.zeros_like(embs[0])
+                else:
+                    pooled_embs = embs[hf_idxs].mean(dim=0)  # Pool embeddings that map to the same spacy token
+                spacy_embs.append(pooled_embs.numpy())
+            spacy_embs = np.stack(spacy_embs)
+            spacy_embs = spacy_embs / np.linalg.norm(spacy_embs, axis=-1, keepdims=True)  # Normalize
+            spacy_embs_list.append(spacy_embs)
+        for embs, sent in zip(spacy_embs_list, sents):
+            assert len(embs) == len(sent)
+        return spacy_embs_list
+
+
+class StaticEmbedding(EmbeddingModel):
+
+    def embed(
+        self,
+        sents: List[Span]
+    ):
+        return [
+            np.stack([t.vector / (t.vector_norm or 1) for t in sent])
+            for sent in sents
+        ]
+
+
+class EmbeddingAligner():
 
     def __init__(
         self,
+        embedding: EmbeddingModel,
         threshold: float,
-        top_k: int
+        top_k: int,
+        baseline_val=0
     ):
         self.threshold = threshold
         self.top_k = top_k
-        scorer = BERTScorer(lang="en", rescale_with_baseline=True)
-        self.model = scorer._model
-        self._device = self.model.device
-        self.baseline_val = scorer.baseline_vals[2].item()
-        self.tokenizer = AutoTokenizer.from_pretrained("roberta-large", add_prefix_space=False)
-        self.tokenizer_add_prefix = AutoTokenizer.from_pretrained("roberta-large", add_prefix_space=True)
+        self.embedding = embedding
+        self.baseline_val = baseline_val
 
     def align(
         self,
@@ -47,7 +102,7 @@ class BertscoreAligner():
         all_sents = list(source.sents) + list(itertools.chain.from_iterable(target.sents for target in targets))
         chunk_sizes = [_iter_len(source.sents)] + \
                       [_iter_len(target.sents) for target in targets]
-        all_sents_token_embeddings = self._embed(all_sents)
+        all_sents_token_embeddings = self.embedding.embed(all_sents)
         chunked_sents_token_embeddings = _split(all_sents_token_embeddings, chunk_sizes)
         source_sent_token_embeddings = chunked_sents_token_embeddings[0]
         source_token_embeddings = np.concatenate(source_sent_token_embeddings)
@@ -62,11 +117,9 @@ class BertscoreAligner():
                 if token.is_stop or token.is_punct:
                     target_token_embeddings[token_idx] = 0
             alignment = defaultdict(list)
-            # todo: ADD mask
             for score, target_idx, source_idx in self._emb_sim_sparse(
                 target_token_embeddings,
                 source_token_embeddings,
-                self.threshold
             ):
                 alignment[target_idx].append((source_idx, score))
             # TODO used argpartition to get nlargest
@@ -75,125 +128,45 @@ class BertscoreAligner():
             alignments.append(alignment)
         return alignments
 
-    def _embed(
-        self,
-        sents: List[Span]
-    ):
-        # TODO:
-        #  - Handle contraction tokenization better
-        #  - Don't add prefix for end of sentence tokens
-
-        # First produce an alignment between spacey tokens and roberta tokens
-        token_alignments = []
-        for sent in sents:
-            token_alignment = []
-            roberta_next_index = 0
-            for i, token in enumerate(sent):
-                # "Tokenize" each word individually, so as to track the alignment between spaCy/HF tokens
-                if i == 0:
-                    # The first token in the sentence is not prefixed by a space. Adding prefix to this can cause
-                    # unexpected behavior is this is OOD
-                    tokenizer = self.tokenizer
-                else:
-                    tokenizer = self.tokenizer_add_prefix
-                n_roberta_tokens = len(tokenizer.tokenize(token.text))
-                token_alignment.append(list(range(roberta_next_index, roberta_next_index + n_roberta_tokens)))
-                roberta_next_index += n_roberta_tokens
-            token_alignments.append(token_alignment)
-
-        input_sents = [
-            " ".join(t.text for t in sent) for sent in sents
-        ]
-        encoded_input = self.tokenizer(
-            input_sents,
-            padding=True,
-            truncation=True,
-            max_length=128,
-            return_tensors='pt'
-        )
-
-        # Compute token embeddings
-        with torch.no_grad():
-            model_output = self.model(**encoded_input.to(self._device))
-            padded_embeddings = model_output[0].cpu()
-
-        attention_mask = encoded_input['attention_mask']
-        embeddings = []
-        for emb_pad, mask in zip(padded_embeddings, attention_mask):
-            emb_nopad = emb_pad[mask == 1]  # Remove embeddings at <pad> positions
-            emb_nopad = emb_nopad[1:-1]  # Remove bos, eos
-            embeddings.append(emb_nopad)
-        spacy_embs_all = []
-        for sent_embs, token_alignment in zip(embeddings, token_alignments):
-            spacy_embs = []
-            for roberta_tok_idxs in token_alignment:
-                pooled_embs = sent_embs[roberta_tok_idxs].mean(dim=0)
-                spacy_embs.append(pooled_embs.numpy())
-            spacy_embs = np.stack(spacy_embs)
-            spacy_embs = spacy_embs / np.linalg.norm(spacy_embs, axis=-1, keepdims=True)
-            spacy_embs_all.append(spacy_embs)
-        for embs, sent in zip(spacy_embs_all, sents):
-            assert len(embs) == len(sent)
-
-        return spacy_embs_all
-
-    def _emb_sim_sparse(self, embs_1, embs_2, sim_threshold):
+    def _emb_sim_sparse(self, embs_1, embs_2):
         sim = embs_1 @ embs_2.T
         sim = (sim - self.baseline_val) / (1 - self.baseline_val)
-        keep = sim > sim_threshold
+        keep = sim > self.threshold
         keep_idxs_1, keep_idxs_2 = np.where(keep)
         keep_scores = sim[keep]
         return list(zip(keep_scores, keep_idxs_1, keep_idxs_2))
 
 
-class StaticEmbeddingAligner():
-
+class BertscoreAligner(EmbeddingAligner):
     def __init__(
         self,
-        threshold: float,
-        top_k: int
+        threshold,
+        top_k
     ):
-        self.threshold = threshold
-        self.top_k = top_k
+        scorer = BERTScorer(lang="en", rescale_with_baseline=True)
+        model = scorer._model
+        embedding = ContextualEmbedding(model, "roberta-large", 510)
+        baseline_val = scorer.baseline_vals[2].item()
 
-    def align(
+        super(BertscoreAligner, self).__init__(
+            embedding, threshold, top_k, baseline_val
+        )
+
+class StaticEmbeddingAligner(EmbeddingAligner):
+    def __init__(
         self,
-        source: Doc,
-        targets: Sequence[Doc]
-    ) -> List[Dict]:
-
-        source_embedding = np.stack([t.vector / (t.vector_norm or 1) for t in source])
-        for token_idx, token in enumerate(source):
-            if token.is_stop or token.is_punct:
-                source_embedding[token_idx] = 0
-        alignments = []
-        for target in targets:
-            target_embedding = np.stack([t.vector / (t.vector_norm or 1) for t in target])
-            for token_idx, token in enumerate(target):
-                if token.is_stop or token.is_punct:
-                    target_embedding[token_idx] = 0
-            alignment = defaultdict(list)
-            for target_token_idx, source_token_idx, sim in self._sim(
-                target_embedding, source_embedding
-            ):
-                alignment[target_token_idx].append((source_token_idx, sim))
-            for k in alignment:
-                alignment[k] = heapq.nlargest(self.top_k, alignment[k], itemgetter(1))
-            alignments.append(alignment)
-        return alignments
-
-    def _sim(self, embs1, embs2):
-        sim = embs1 @ embs2.T
-        keep = sim > self.threshold
-        keep_idxs_1, keep_idxs_2 = np.where(keep)
-        keep_scores = sim[keep]
-        return list(zip(keep_idxs_1, keep_idxs_2, keep_scores))
+        threshold,
+        top_k
+    ):
+        embedding = StaticEmbedding()
+        super(StaticEmbeddingAligner, self).__init__(
+            embedding, threshold, top_k
+        )
 
 
 class NGramAligner():
 
-    def __init__(self, max_n):
-        self.max_n = max_n
+    def __init__(self):
         self.stemmer = PorterStemmer()
 
     def align(
@@ -216,8 +189,8 @@ class NGramAligner():
         doc: Doc,
     ):
         ngrams = []
-        for n in range(1, self.max_n + 1):
-            for sent in doc.sents:
+        for sent in doc.sents:
+            for n in range(1, len(list(sent))):
                 tokens = [t for t in sent if not (t.is_stop or t.is_punct)]
                 ngrams.extend(_ngrams(tokens, n))
 
@@ -274,11 +247,92 @@ class NGramAligner():
                     # check that token positions still available:
                     # if all(token_is_available_2[slice(*span)]):
                     matched_spans_2.append(span)
-                        # token_is_available_2[slice(*span)] = [False] * (span[1] - span[0])
+                    # token_is_available_2[slice(*span)] = [False] * (span[1] - span[0])
             for span1 in matched_spans_1:
                 alignment[span1] = matched_spans_2
 
         return alignment
+
+
+class SpacyHuggingfaceTokenizer:
+    def __init__(
+        self,
+        model_name,
+        max_length
+    ):
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
+        self.max_length = max_length
+
+    def batch_encode(
+        self,
+        sents: List[Span]
+    ):
+        token_alignments = []
+        token_ids_list = []
+
+        # Tokenize each sentence and special tokens.
+        for sent in sents:
+            hf_tokens, token_alignment = self.tokenize(sent)
+            token_alignments.append(token_alignment)
+            token_ids = self.tokenizer.convert_tokens_to_ids(hf_tokens)
+            encoding = self.tokenizer.prepare_for_model(
+                token_ids,
+                add_special_tokens=True,
+                padding=False,
+            )
+            token_ids_list.append(encoding['input_ids'])
+
+        # Add padding
+        max_length = max(map(len, token_ids_list))
+        attention_mask = []
+        input_ids = []
+        special_tokens_masks = []
+        for token_ids in token_ids_list:
+            encoding = self.tokenizer.prepare_for_model(
+                token_ids,
+                padding=PaddingStrategy.MAX_LENGTH,
+                max_length=max_length,
+                add_special_tokens=False
+            )
+            input_ids.append(encoding['input_ids'])
+            attention_mask.append(encoding['attention_mask'])
+            special_tokens_masks.append(
+                self.tokenizer.get_special_tokens_mask(
+                    encoding['input_ids'],
+                    already_has_special_tokens=True
+                )
+            )
+
+        encoded = {
+            'input_ids': torch.tensor(input_ids),
+            'attention_mask': torch.tensor(attention_mask)
+        }
+        return encoded, special_tokens_masks, token_alignments
+
+    def tokenize(
+        self,
+        sent
+    ):
+        """Convert spacy sentence to huggingface tokens and compute the alignment"""
+        hf_tokens = []
+        token_alignment = []
+        for i, token in enumerate(sent):
+            # "Tokenize" each word individually, so as to track the alignment between spaCy/HF tokens
+            # Prefix all tokens with a space except the first one in the sentence
+            if i == 0:
+                token_text = token.text
+            else:
+                token_text = ' ' + token.text
+            start_hf_idx = len(hf_tokens)
+            word_tokens = self.tokenizer.tokenize(token_text)
+            end_hf_idx = len(hf_tokens) + len(word_tokens)
+            if end_hf_idx < self.max_length:
+                hf_tokens.extend(word_tokens)
+                hf_idxs = list(range(start_hf_idx, end_hf_idx))
+            else:
+                hf_idxs = None
+            token_alignment.append(hf_idxs)
+        return hf_tokens, token_alignment
 
 
 def _split(data, sizes):
@@ -296,39 +350,3 @@ def _iter_len(it):
 def _ngrams(tokens, n):
     for i in range(len(tokens) - n + 1):
         yield tokens[i:i + n]
-
-
-if __name__ == "__main__":
-    import spacy
-
-    nlp = spacy.load("en_core_web_sm")
-
-    # source = "His injuries are not believed to be life threatening ."
-    source = "(CNN)Singer-songwriter David Crosby hit a jogger with his car Sunday evening, a spokesman said. The accident happened in Santa Ynez, California, near where Crosby lives. Crosby was driving at approximately 50 mph when he struck the jogger, according to California Highway Patrol Spokesman Don Clotworthy. The posted speed limit was 55. The jogger suffered multiple fractures, and was airlifted to a hospital in Santa Barbara, Clotworthy said. His injuries are not believed to be life threatening. \"Mr. Crosby was cooperative with authorities and he was not impaired or intoxicated in any way. Mr. Crosby did not see the jogger because of the sun,\" said Clotworthy. According to the spokesman, the jogger and Crosby were on the same side of the road. Pedestrians are supposed to be on the left side of the road walking toward traffic, Clotworthy said. Joggers are considered pedestrians. Crosby is known for weaving multilayered harmonies over sweet melodies. He belongs to the celebrated rock group Crosby, Stills & Nash. \"David Crosby is obviously very upset that he accidentally hit anyone. And, based off of initial reports, he is relieved that the injuries to the gentleman were not life threatening,\" said Michael Jensen, a Crosby spokesman. \"He wishes the jogger a very speedy recovery.\""
-    targets = [
-        "Singer-songwriter David Crosby says he's \"relieved\" and \"appreciative\" that a jogger suffered non-life-threatening injuries after being hit by his car Sunday evening. A California Highway Patrol spokesman tells CNN that Crosby, who was driving around 50mph at the time, \"was cooperative with authorities and he was not impaired or intoxicated in any way. Mr. Crosby did not see the jogger because of the sun.\" The spokesman says the jogger was on the left side of the road near Crosby's home in Santa Ynez, and pedestrians are supposed to be on the left side of the road when walking toward traffic. \"David Crosby is obviously very upset that he accidentally hit anyone. And, based off of initial reports, he is relieved that the injuries to the gentleman were not life-threatening,\" a Crosby rep tells CNN. \"He wishes the jogger a very speedy recovery.\""
-    ]
-    # source = "He's extremely relieved."
-    # targets = ["He is relieved. He is extremely relieved."]
-    aligners = [
-        # BertscoreAligner(0.0, 3),
-        # StaticEmbeddingAligner(0.1, 3),
-    ]
-    source_doc = nlp(source)
-    target_docs = list(map(nlp, targets))
-    # token_maps = bertscore_sim(source_doc, target_docs, 0.1)
-    for aligner in aligners:
-        print(aligner.__class__)
-        alignments = aligner.align(source_doc, target_docs)
-        for target_doc, alignment in zip(target_docs, alignments):
-            for target_idx, source_matches in alignment.items():
-                for source_idx, score in source_matches:
-                    print(f"{score:.3f} {target_doc[target_idx]} {source_doc[source_idx]}")
-
-    aligner = NGramAligner(10)
-    alignments = aligner.align(source_doc, target_docs)
-    for target_doc, alignment in zip(target_docs, alignments):
-        for target_span, source_spans in sorted(alignment.items()):
-            print("target:", target_doc[slice(*target_span)], target_span)
-            for source_span in source_spans:
-                print("\tsource:", source_doc[slice(*source_span)])

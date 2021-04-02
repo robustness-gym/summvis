@@ -4,23 +4,23 @@ import operator
 import os
 import re
 from pathlib import Path
-from types import SimpleNamespace
 
 import spacy
 import streamlit as st
 import streamlit.components.v1 as components
 from htbuilder import styles, div
 from robustnessgym import Dataset, Identifier
+from robustnessgym import Spacy
 from spacy.tokens import Doc
 
-from align import BertscoreAligner, NGramAligner, StaticEmbeddingAligner
+from align import NGramAligner, BertscoreAligner, StaticEmbeddingAligner
 from components import main_view
-from preprocessing import _spacy_decode, NGramAlignerCap, StaticEmbeddingAlignerCap, \
+from preprocessing import NGramAlignerCap, StaticEmbeddingAlignerCap, \
     BertscoreAlignerCap
+from preprocessing import _spacy_decode, _spacy_encode
+from utils import preprocess_text
 
 MIN_SEMANTIC_SIM_THRESHOLD = 0.1
-
-nlp = spacy.load("en_core_web_lg")
 
 Doc.set_extension("name", default=None, force=True)
 Doc.set_extension("column", default=None, force=True)
@@ -36,7 +36,7 @@ class Instance():
         self.data = data
 
 
-@st.cache
+@st.cache(allow_output_mutation=True)
 def load_from_index(filename, index):
     with open(filename) as f:
         for i, line in enumerate(f):
@@ -53,6 +53,11 @@ def load_dataset(path: str):
     except NotADirectoryError:
         return Dataset.from_jsonl(path)
 
+@st.cache(allow_output_mutation=True)
+def get_nlp():
+    nlp = spacy.load("en_core_web_lg")
+    nlp.add_pipe('sentencizer', before="parser")
+    return nlp
 
 def _retrieve(dataset, index):
     if index >= len(dataset):
@@ -62,9 +67,8 @@ def _retrieve(dataset, index):
     id_ = data['id']
 
     try:
-        document = _spacy_decode(
-            SimpleNamespace(nlp=nlp),
-            data[Identifier('Spacy')(columns=['document'])]
+        document = rg_spacy.decode(
+            data[rg_spacy.identifier(columns=['preprocessed_document'])]
         )
     except KeyError:
         try:
@@ -79,9 +83,8 @@ def _retrieve(dataset, index):
     document._.column = "document"
 
     try:
-        reference = _spacy_decode(
-            SimpleNamespace(nlp=nlp),
-            data[Identifier('Spacy')(columns=['summary:reference'])]
+        reference = rg_spacy.decode(
+            data[rg_spacy.identifier(columns=['preprocessed_summary:reference'])]
         )
     except KeyError:
         try:
@@ -92,23 +95,28 @@ def _retrieve(dataset, index):
     reference._.name = "Reference"
     reference._.column = "summary:reference"
 
-    preds = []
-    for k, v in data.items():
-        if k.startswith('summary:') and k != 'summary:reference':
-            try:
-                pred = _spacy_decode(
-                    SimpleNamespace(nlp=nlp),
-                    data[Identifier('Spacy')(columns=[k])]
-                )
-            except KeyError:
-                pred = nlp(preprocess_text(v))
+    model_names = set()
+    for k in data:
+        m = re.match('(preprocessed_)?summary:(?P<model>.*)', k)
+        if m:
+            model_name = m.group('model')
+            if model_name != 'reference':
+                model_names.add(model_name)
 
-            model_name = k.replace('summary:', '').upper()
-            pred._.name = model_name
-            pred._.column = k
-            preds.append(
-                pred
+    preds = []
+    for model_name in model_names:
+        try:
+            pred = rg_spacy.decode(
+                data[rg_spacy.identifier(columns=[f"preprocessed_summary:{model_name}"])]
             )
+        except KeyError:
+            pred = nlp(preprocess_text(data[f"summary:{model_name}"]))
+
+        pred._.name = model_name.upper()
+        pred._.column = f"summary:{model_name}"
+        preds.append(
+            pred
+        )
 
     preds.sort(key=operator.attrgetter('_.name'))
 
@@ -161,11 +169,6 @@ def retrieve(filename, index):
         reference=reference,
         preds=preds
     )
-
-
-def preprocess_text(text):
-    split_punct = re.escape(r'!"#$%&()*+,-\./:;<=>?@[\]^_`{|}~)')
-    return ' '.join(re.findall(rf"[\w']+|[{split_punct}]", text))
 
 
 def filter_alignment(alignment, threshold):
@@ -240,7 +243,6 @@ def show_main(example):
             NGramAlignerCap.decode(
                 example.data[
                     Identifier(NGramAlignerCap.__name__)(
-                        max_n=n,
                         columns=[
                             f'preprocessed_{document._.column}',
                             f'preprocessed_{summary._.column}',
@@ -255,7 +257,7 @@ def show_main(example):
             for d in lexical_alignments
         ]
     except KeyError:
-        lexical_alignments = NGramAligner(n).align(document, summaries)
+        lexical_alignments = NGramAligner().align(document, summaries)
 
     if semantic_sim_type == "Static embedding":
         try:
@@ -326,16 +328,24 @@ def show_main(example):
 
 if __name__ == "__main__":
 
+    st.set_page_config(layout="wide")
+
     parser = argparse.ArgumentParser()
-    parser.add_argument('--path', type=str, default='data')
+    parser.add_argument('--path', type=str, default='preloading')
     parser.add_argument('--file', type=str)
     args = parser.parse_args()
 
-    st.set_page_config(layout="wide")
+    nlp = get_nlp()
+
+    Spacy.encode = _spacy_encode
+    Spacy.decode = _spacy_decode
+    rg_spacy = Spacy(nlp=nlp)
+
     path = Path(args.path)
     all_files = set(map(os.path.basename, path.glob('*')))
-    exclude_files = set(map(os.path.basename, path.glob('*.py')))
-    files = sorted(all_files - exclude_files)
+    files = sorted([
+        fname for fname in all_files if not (fname.endswith(".py") or fname.startswith("."))
+    ])
     if args.file:
         try:
             file_index = files.index(args.input)
@@ -351,10 +361,6 @@ if __name__ == "__main__":
 
     sidebar_placeholder_from = st.sidebar.empty()
     sidebar_placeholder_to = st.sidebar.empty()
-
-    n = 0
-    n = st.sidebar.selectbox(label="Max n-gram length", options=list(range(1, 11)),
-                             index=9)
 
     if query is not None:
         dataset = load_dataset(str(filename))

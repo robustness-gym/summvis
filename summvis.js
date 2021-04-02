@@ -7,7 +7,6 @@ $(document).ready(
         let saveDragPos;
 
         let mouseOverHighlight = false;
-        let mouseMovedAfterClick = false;  // Avoids immediately triggering hover event after selecting summary
 
         let rtime;
         let timeout = false;
@@ -96,7 +95,7 @@ $(document).ready(
                         const el = $(value);
                         const x = el.position().left;
                         const y = mainDoc.scrollTop() + el.position().top - mainDoc.position().top;
-                        const newHeight = 4;
+                        const newHeight = 5;
                         const color = el.css("background-color");
                         const proxyPadding = proxyDoc.innerWidth() - proxyDoc.width()
                         const newX = x * scaleX + proxyPadding / 2;
@@ -207,6 +206,14 @@ $(document).ready(
                 $(".summary-item").removeClass("selectable")
             }
 
+            if (showSemantic || showLexical || showEntities) {
+                $(".summary-item").addClass("annotated");
+                $(".display .main-doc").addClass("annotated");
+            } else {
+                $(".summary-item").removeClass("annotated");
+                $(".display .main-doc").removeClass("annotated");
+            }
+
             if (showLexical) {
                 $(".underline").removeClass("annotation-hidden");
                 $(".summary-item").addClass("show-lexical");
@@ -312,8 +319,8 @@ $(document).ready(
             $(this).removeClass("annotation-inactive");
             $('.summary-item [title]').removeAttr("title");
             if (!isViewable($(matchedDocHighlight)[0])) {
-                    $(this).attr("title", "Click to scroll to most similar word.")
-                }
+                $(this).attr("title", "Click to scroll to most similar word.")
+            }
         }
 
         function isViewable(el) {
@@ -333,12 +340,6 @@ $(document).ready(
 
         // Bind events
 
-        $(".summary-item").mousemove(
-            function () {
-                mouseMovedAfterClick = true;
-            }
-        );
-
         $(window).resize(function () {
             rtime = new Date();
             if (timeout === false) {
@@ -351,7 +352,6 @@ $(document).ready(
             "click",
             ".summary-item.selectable:not(.selected)",
             function () {
-                mouseMovedAfterClick = false;
                 const summary_index = $(this).data("index");
 
                 // Update summary items
@@ -383,18 +383,15 @@ $(document).ready(
             "mouseenter",
             activeUnderlines,
             function () {
-                if (!mouseMovedAfterClick) {
-                    return
-                }
                 const spanId = $(this).data("span-id");
                 // TODO Consolidate into single statement
                 $(`.summary-item.selected .underline[data-span-id=${spanId}]`).removeClass("annotation-inactive");
                 $(`.doc .underline[data-span-id=${spanId}]`).removeClass("annotation-inactive");
-                $(`.proxy-underline[data-span-id=${spanId}]`).removeClass("annotation-invisible");
+                $(`.proxy-underline[data-span-id=${spanId}]`).removeClass("annotation-inactive");
 
                 $(`.summary-item.selected .underline[data-span-id!=${spanId}]`).addClass("annotation-inactive");
                 $(`.doc .underline[data-span-id!=${spanId}]`).addClass("annotation-inactive");
-                $(`.proxy-underline[data-span-id!=${spanId}]`).addClass("annotation-invisible");
+                $(`.proxy-underline[data-span-id!=${spanId}]`).addClass("annotation-inactive");
 
                 $(".summary-item.selected .highlight:not(.annotation-hidden)").addClass("annotation-inactive");
             }
@@ -427,9 +424,6 @@ $(document).ready(
             "mouseenter",
             activeHighlights,
             function () {
-                if (!mouseMovedAfterClick) {
-                    return
-                }
                 highlightToken.call(this);
             })
         $(".summary-list").on(

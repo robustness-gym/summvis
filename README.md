@@ -1,6 +1,5 @@
 # SummVis
-SummVis is an interactive visualization and analysis tool for inspecting summarization datasets and model generated 
-summaries.
+SummVis is an interactive visualization tool for analyzing abstractive summarization model outputs and datasets.
 
 ## Installation
 Please use `python>=3.8` since some dependencies require that for installation.
@@ -8,78 +7,102 @@ Please use `python>=3.8` since some dependencies require that for installation.
 git clone https://github.com/robustness-gym/summvis.git
 cd summvis
 pip install -r requirements.txt
-python -m spacy download en_core_web_sm
 python -m spacy download en_core_web_lg
 ```
 
 ## Quickstart
 Follow the steps below to start using SummVis immediately.
 
-#### Download and extract data
-Download our pre-cached dataset that contains predictions for state-of-the-art models such as Pegasus and BART on 
-1000 examples taken from the CNN-Dailymail validation set.
+### 1. Download and extract data
+Download our pre-cached dataset that contains predictions for state-of-the-art models such as PEGASUS and BART on 
+1000 examples taken from the CNN / Daily Mail validation set.
 ```shell
 mkdir data
 mkdir preprocessing
-curl https://storage.googleapis.com/sfr-summvis-data-research/cnn_dailymail_1000.anonymized.zip --output preprocessing/cnn_dailymail_1000.anonymized.zip
-unzip preprocessing/cnn_dailymail_1000.anonymized.zip -d preprocessing/
+curl https://storage.googleapis.com/sfr-summvis-data-research/cnn_dailymail_1000.validation.anonymized.zip --output preprocessing/cnn_dailymail_1000.validation.anonymized.zip
+unzip preprocessing/cnn_dailymail_1000.validation.anonymized.zip -d preprocessing/
 ``` 
 
-#### Deanonymize data
-Next, we'll need to add the original examples from the CNN-Dailymail dataset to deanonymize the data (this information 
+### 2. Deanonymize data
+Next, we'll need to add the original examples from the CNN / Daily Mail dataset to deanonymize the data (this information 
 is omitted for copyright reasons). The `preprocessing.py` script can be used for this with the `--deanonymize` flag.
 
-##### Option 1: Deanonymize all 1000 examples in the provided CNN-Dailymail data.
-Takes around `2` minutes on a MacBook Pro.
-
+#### Deanonymize 10 examples (`try_it` mode):
 ```shell
 python preprocessing.py \
 --deanonymize \
---dataset_rg preprocessing/cnn_dailymail_1000.anonymized \
+--dataset_rg preprocessing/cnn_dailymail_1000.validation.anonymized \
 --dataset cnn_dailymail \
 --version 3.0.0 \
 --split validation \
---processed_dataset_path data/full:cnn_dailymail_1000 \
---n_samples 1000
-```
-
-##### Option 2 (`try_it`): Deanonymize a sample of the provided CNN-Dailymail data.
-Takes around `20` seconds on a MacBook Pro.
-
-```shell
-python preprocessing.py \
---deanonymize \
---dataset_rg preprocessing/cnn_dailymail_1000.anonymized \
---dataset cnn_dailymail \
---version 3.0.0 \
---split validation \
---processed_dataset_path data/try:cnn_dailymail_1000 \
+--processed_dataset_path data/try:cnn_dailymail_1000.validation \
 --try_it
 ```
+This takes around 20 seconds on a MacBook Pro. 
 
-#### Option 3 (`n_samples`): Deanonymize a fixed number of examples (e.g. 50) in the provided CNN-Dailymail data.
-```shell
-python preprocessing.py \
---deanonymize \
---dataset_rg preprocessing/cnn_dailymail_1000.anonymized \
---dataset cnn_dailymail \
---version 3.0.0 \
---split validation \
---processed_dataset_path data/50:cnn_dailymail_1000 \
---n_samples 50
-```
-
-## Running SummVis
+### 3. Run SummVis
 Finally, we're ready to run the Streamlit app. Once the app loads, make sure it's pointing to the right `File` at the top
 of the interface.
 ```shell
 streamlit run summvis.py
 ```
+
+## General instructions for running with pre-loaded datasets
+
+### 1. Download one of the pre-loaded datasets:
+
+##### CNN / Daily Mail (1000 examples from validation set): https://storage.googleapis.com/sfr-summvis-data-research/cnn_dailymail_1000.validation.anonymized.zip
+##### XSum (1000 examples from validation set): https://storage.googleapis.com/sfr-summvis-data-research/xsum_1000.validation.anonymized.zip
+
+
+#### Example: Download and unzip CNN / Daily Mail
+```shell
+mkdir data
+mkdir preprocessing
+curl https://storage.googleapis.com/sfr-summvis-data-research/cnn_dailymail_1000.validation.anonymized.zip --output preprocessing/cnn_dailymail_1000.validation.anonymized.zip
+unzip preprocessing/cnn_dailymail_1000.validation.anonymized.zip -d preprocessing/
+``` 
+
+### 2. Deanonymize *n* examples:
+
+Set the `--n_samples` argument and name the `--processed_dataset_path` output file accordingly.
+
+#### Example: Deanonymize 100 examples from CNN / Daily Mail:
+```shell
+python preprocessing.py \
+--deanonymize \
+--dataset_rg preprocessing/cnn_dailymail_1000.validation.anonymized \
+--dataset cnn_dailymail \
+--version 3.0.0 \
+--split validation \
+--processed_dataset_path data/100:cnn_dailymail_1000.validation \
+--n_samples 100
+```
+
+#### Example: Deanonymize all pre-loaded examples from CNN / Daily Mail:
+```shell
+python preprocessing.py \
+--deanonymize \
+--dataset_rg preprocessing/cnn_dailymail_1000.validation.anonymized \
+--dataset cnn_dailymail \
+--version 3.0.0 \
+--split validation \
+--processed_dataset_path data/full:cnn_dailymail_1000.validation \
+--n_samples 1000
+
+### 3. Run SummVis
+Once the app loads, make sure it's pointing to the right `File` at the top
+of the interface.
+```shell
+streamlit run summvis.py
+```
+
 Alternately, if you need to point SummVis to a folder where your data is stored.
 ```shell
 streamlit run summvis.py -- --path your/path/to/data
 ```
 Note that the additional `--` is not a mistake, and is required to pass command-line arguments in streamlit.
+
 
 ## Get your data into SummVis: end-to-end preprocessing
 You can also perform preprocessing end-to-end to load any summarization dataset or model predictions into SummVis. 
@@ -89,17 +112,17 @@ Instructions for this are provided below.
 Loads in a dataset from HF, or any dataset that you have and stores it in a 
 standardized format with columns for `document` and `summary:reference`.  
 
-#### Example: Save CNN-Dailymail validation split to disk as a jsonl file.
+#### Example: Save CNN / Daily Mail validation split to disk as a jsonl file.
 ```shell
 python preprocessing.py \
 --standardize \
 --dataset cnn_dailymail \
 --version 3.0.0 \
 --split validation \
---save_jsonl_path preprocessing/cnn_dailymail_v3_validation.jsonl
+--save_jsonl_path preprocessing/cnn_dailymail.validation.jsonl
 ```
 
-#### Example: Load custom `my_dataset.jsonl`, standardize and save.
+#### Example: Load custom `my_dataset.jsonl`, standardize, and save.
 ```shell
 python preprocessing.py \
 --standardize \
@@ -113,7 +136,7 @@ python preprocessing.py \
 Takes a saved dataset that has already been standardized and adds predictions to it 
 from prediction jsonl files. 
 
-#### Example: Add 6 prediction files for Pegasus and BART to the dataset.
+#### Example: Add 6 prediction files for PEGASUS and BART to the dataset.
 ```shell
 python preprocessing.py \
 --join_predictions \
@@ -137,8 +160,8 @@ and stores the processed dataset back to disk.
 ```shell
 python preprocessing.py \
 --workflow \
---dataset_jsonl preprocessing/cnn_dailymail_v3_validation.jsonl \
---processed_dataset_path data/cnn_dailymail_v3 \
+--dataset_jsonl preprocessing/cnn_dailymail.validation.jsonl \
+--processed_dataset_path data/cnn_dailymail.validation \
 --try_it
 ```
 
@@ -146,8 +169,8 @@ python preprocessing.py \
 ```shell
 python preprocessing.py \
 --workflow \
---dataset_jsonl preprocessing/cnn_dailymail_v3_validation.jsonl \
---processed_dataset_path data/cnn_dailymail_v3
+--dataset_jsonl preprocessing/cnn_dailymail.validation.jsonl \
+--processed_dataset_path data/cnn_dailymail
 ```
 
 

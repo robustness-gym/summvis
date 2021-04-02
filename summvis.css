@@ -161,7 +161,7 @@ body {
     font-weight: 400;
 }
 
-.summary-item.selected .name {
+.summary-item.selected.selectable .name {
     font-weight: 500;
 }
 
@@ -169,11 +169,11 @@ body {
     opacity: 0.5 !important;
 }
 
-.stopword {
+.annotated .stopword {
     opacity: 50%
 }
 
-.has-lexical-alignment .summary-item {
+.has-lexical-alignment .summary-item.annotated {
     /* Bold all non-underlined items */
     font-weight: 500;
 }

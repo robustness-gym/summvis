@@ -11,7 +11,7 @@ from robustnessgym.core.tools import strings_as_json
 from robustnessgym.logging.utils import set_logging_level
 from spacy import load
 from spacy.attrs import DEP, IS_ALPHA, IS_PUNCT, IS_STOP, LEMMA, LOWER, TAG, SENT_END, \
-    SENT_START, ORTH, POS
+    SENT_START, ORTH, POS, ENT_IOB
 from spacy.tokens import Doc
 
 from align import BertscoreAligner, NGramAligner, StaticEmbeddingAligner
@@ -25,7 +25,7 @@ logger.setLevel(logging.CRITICAL)
 def _spacy_encode(self, x):
     arr = x.to_array(
         [DEP, IS_ALPHA, IS_PUNCT, IS_STOP, LEMMA, LOWER, TAG, SENT_END, SENT_START,
-         ORTH, POS])
+         ORTH, POS, ENT_IOB])
     return {
         'arr': arr.flatten(),
         'shape': list(arr.shape),
@@ -37,7 +37,7 @@ def _spacy_decode(self, x):
     doc = Doc(self.nlp.vocab, words=x['words'])
     return doc.from_array(
         [DEP, IS_ALPHA, IS_PUNCT, IS_STOP, LEMMA, LOWER,
-         TAG, SENT_END, SENT_START, ORTH, POS],
+         TAG, SENT_END, SENT_START, ORTH, POS, ENT_IOB],
         x['arr'].reshape(x['shape'])
     )
 
@@ -101,13 +101,11 @@ class BertscoreAlignerCap(AlignerCap):
 class NGramAlignerCap(AlignerCap):
     def __init__(
             self,
-            max_n: float,
             spacy,
     ):
         super(NGramAlignerCap, self).__init__(
-            aligner=NGramAligner(max_n=max_n),
-            spacy=spacy,
-            max_n=max_n,
+            aligner=NGramAligner(),
+            spacy=spacy
         )
 
 
@@ -281,7 +279,6 @@ def run_workflow(
         summary_columns: List[str] = None,
         bert_aligner_threshold: float = 0.5,
         bert_aligner_top_k: int = 3,
-        ngram_aligner_max_n: int = 3,
         embedding_aligner_threshold: float = 0.5,
         embedding_aligner_top_k: int = 3,
         processed_dataset_path: str = None,
@@ -355,7 +352,6 @@ def run_workflow(
     )
 
     ngram_aligner = NGramAlignerCap(
-        max_n=ngram_aligner_max_n,
         spacy=spacy,
     )
 
@@ -495,7 +491,8 @@ def standardize_dataset(
     if (doc_column is None) or (reference_column is None):
         try:
             doc_column, reference_column = {
-                'cnn_dailymail': ('article', 'highlights')
+                'cnn_dailymail': ('article', 'highlights'),
+                'xsum': ('document', 'summary')
             }[dataset_name]
         except:
             raise NotImplementedError(
@@ -503,9 +500,10 @@ def standardize_dataset(
             )
 
     # Rename the columns
-    dataset.add_column('document', dataset[doc_column])
+    if doc_column != 'document':
+        dataset.add_column('document', dataset[doc_column])
+        dataset.remove_column(doc_column)
     dataset.add_column('summary:reference', dataset[reference_column])
-    dataset.remove_column(doc_column)
     dataset.remove_column(reference_column)
 
     # Save the dataset back to disk
@@ -555,7 +553,7 @@ def get_hf_dataset(name: str, version: str = None, split: str = 'test'):
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('--dataset', type=str, choices=['cnn_dailymail'],
+    parser.add_argument('--dataset', type=str, choices=['cnn_dailymail', 'xsum'],
                         help="Huggingface dataset name.")
     parser.add_argument('--version', type=str,
                         help="Huggingface dataset version.")
@@ -582,8 +580,6 @@ if __name__ == '__main__':
                         help="Minimum threshold for BERT alignment.")
     parser.add_argument('--bert_aligner_top_k', type=int, default=10,
                         help="Top-k for BERT alignment.")
-    parser.add_argument('--ngram_aligner_max_n', type=int, default=10,
-                        help="Max-n for n-gram alignment.")
     parser.add_argument('--embedding_aligner_threshold', type=float, default=0.1,
                         help="Minimum threshold for embedding alignment.")
     parser.add_argument('--embedding_aligner_top_k', type=int, default=10,
@@ -647,7 +643,6 @@ if __name__ == '__main__':
             summary_columns=args.summary_columns,
             bert_aligner_threshold=args.bert_aligner_threshold,
             bert_aligner_top_k=args.bert_aligner_top_k,
-            ngram_aligner_max_n=args.ngram_aligner_max_n,
             embedding_aligner_threshold=args.embedding_aligner_threshold,
             embedding_aligner_top_k=args.embedding_aligner_top_k,
             processed_dataset_path=args.processed_dataset_path,
