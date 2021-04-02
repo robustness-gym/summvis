@@ -331,7 +331,7 @@ if __name__ == "__main__":
     st.set_page_config(layout="wide")
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--path', type=str, default='preloading')
+    parser.add_argument('--path', type=str, default='data')
     parser.add_argument('--file', type=str)
     args = parser.parse_args()
 
