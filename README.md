@@ -91,6 +91,17 @@ python preprocessing.py \
 --n_samples 1000
 ```
 
+#### Example: Deanonymize all pre-loaded examples from XSum:
+```shell
+python preprocessing.py \
+--deanonymize \
+--dataset_rg preprocessing/xsum_1000.validation.anonymized \
+--dataset xsum \
+--split validation \
+--processed_dataset_path data/full:xsum_1000.validation \
+--n_samples 1000
+```
+
 ### 3. Run SummVis
 Once the app loads, make sure it's pointing to the right `File` at the top
 of the interface.
