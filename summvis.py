@@ -112,7 +112,14 @@ def _retrieve(dataset, index):
         except KeyError:
             pred = nlp(preprocess_text(data[f"summary:{model_name}"]))
 
-        pred._.name = model_name.upper()
+        parts = model_name.split("-")
+        if len(parts) == 2:
+            model, train_dataset = parts
+            model_name = f"{model.upper()} (trained on {train_dataset.upper()})"
+        else:
+            model_name = model_name.upper()
+
+        pred._.name = model_name
         pred._.column = f"summary:{model_name}"
         preds.append(
             pred
