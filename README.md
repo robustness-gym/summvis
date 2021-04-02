@@ -89,6 +89,7 @@ python preprocessing.py \
 --split validation \
 --processed_dataset_path data/full:cnn_dailymail_1000.validation \
 --n_samples 1000
+```
 
 ### 3. Run SummVis
 Once the app loads, make sure it's pointing to the right `File` at the top
