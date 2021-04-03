@@ -21,6 +21,7 @@ from preprocessing import _spacy_decode, _spacy_encode
 from utils import preprocess_text
 
 MIN_SEMANTIC_SIM_THRESHOLD = 0.1
+MAX_SEMANTIC_SIM_TOP_K = 10
 
 Doc.set_extension("name", default=None, force=True)
 Doc.set_extension("column", default=None, force=True)
@@ -177,12 +178,12 @@ def retrieve(filename, index):
     )
 
 
-def filter_alignment(alignment, threshold):
+def filter_alignment(alignment, threshold, top_k):
     filtered_alignment = {}
     for k, v in alignment.items():
         filtered_matches = [(match_idx, score) for match_idx, score in v if score >= threshold]
         if filtered_matches:
-            filtered_alignment[k] = filtered_matches
+            filtered_alignment[k] = sorted(filtered_matches, key=operator.itemgetter(1), reverse=True)[:top_k]
     return filtered_alignment
 
 
@@ -236,8 +237,13 @@ def show_main(example):
         step=0.1,
         value=0.3,
     )
-    semantic_sim_top_k = st.sidebar.selectbox(label="Max top-k semantic sim",
-                                              options=list(range(1, 11)), index=9)
+    semantic_sim_top_k = st.sidebar.slider(
+        "Semantic similarity top-k:",
+        min_value=1,
+        max_value=MAX_SEMANTIC_SIM_TOP_K,
+        step=1,
+        value=10,
+    )
 
     document, summaries = select_comparison(example)
     layout = st.sidebar.radio("Layout:", ["Vertical", "Horizontal"]).lower()
@@ -272,7 +278,7 @@ def show_main(example):
                     example.data[
                         Identifier(StaticEmbeddingAlignerCap.__name__)(
                             threshold=MIN_SEMANTIC_SIM_THRESHOLD,
-                            top_k=semantic_sim_top_k,
+                            top_k=MAX_SEMANTIC_SIM_TOP_K,
                             columns=[
                                 f'preprocessed_{document._.column}',
                                 f'preprocessed_{summary._.column}',
@@ -290,7 +296,7 @@ def show_main(example):
             )
         else:
             semantic_alignments = [
-                filter_alignment(alignment, semantic_sim_threshold)
+                filter_alignment(alignment, semantic_sim_threshold, semantic_sim_top_k)
                 for alignment in semantic_alignments
             ]
     else:
@@ -300,7 +306,7 @@ def show_main(example):
                     example.data[
                         Identifier(BertscoreAlignerCap.__name__)(
                             threshold=MIN_SEMANTIC_SIM_THRESHOLD,
-                            top_k=semantic_sim_top_k,
+                            top_k=MAX_SEMANTIC_SIM_TOP_K,
                             columns=[
                                 f'preprocessed_{document._.column}',
                                 f'preprocessed_{summary._.column}',
@@ -315,7 +321,7 @@ def show_main(example):
                                                                              summaries)
         else:
             semantic_alignments = [
-                filter_alignment(alignment, semantic_sim_threshold)
+                filter_alignment(alignment, semantic_sim_threshold, semantic_sim_top_k)
                 for alignment in semantic_alignments
             ]
 
