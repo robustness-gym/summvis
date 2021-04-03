@@ -62,9 +62,17 @@ def get_nlp():
     return nlp
 
 
-def retrieve(dataset, index):
+def retrieve(dataset, index, filename=None):
     if index >= len(dataset):
         st.error(f"Index {index} exceeds dataset length.")
+
+    eval_dataset = None
+    if filename:
+        # TODO Handle this through dedicated fields
+        if filename.startswith("cnn_dailymail"):
+            eval_dataset = "cnndm"
+        elif filename.startswith("xsum"):
+            eval_dataset = "xsum"
 
     data = dataset[index]
     id_ = data.get('id', '')
@@ -116,18 +124,23 @@ def retrieve(dataset, index):
             pred = nlp(preprocess_text(data[f"summary:{model_name}"]))
 
         parts = model_name.split("-")
+        primary_sort = 0
         if len(parts) == 2:
             model, train_dataset = parts
-            formatted_model_name = f"{model.upper()} ({train_dataset.upper()}-trained)"
+            if train_dataset == eval_dataset:
+                formatted_model_name = model.upper()
+            else:
+                formatted_model_name = f"{model.upper()} ({train_dataset.upper()}-trained)"
+                primary_sort = 1
         else:
-            formatted_model_name = model_name = model_name.upper()
+            formatted_model_name = model_name.upper()
         pred._.name = formatted_model_name
         pred._.column = f"summary:{model_name}"
         preds.append(
-            pred
+            ((primary_sort, formatted_model_name), pred)
         )
 
-    preds.sort(key=operator.attrgetter('_.name'))
+    preds = [pred for _, pred in sorted(preds)]
 
     return Instance(
         id_=id_,
@@ -327,8 +340,7 @@ if __name__ == "__main__":
     else:
         file_index = 0
         col1, col2 = st.beta_columns((3, 1))
-    option = col1.selectbox(label="File:", options=files, index=file_index)
-    filename = path / option
+    filename = col1.selectbox(label="File:", options=files, index=file_index)
 
     query = col2.number_input("Row index:", value=0, min_value=0)
 
@@ -336,7 +348,7 @@ if __name__ == "__main__":
     sidebar_placeholder_to = st.sidebar.empty()
 
     if query is not None:
-        dataset = load_dataset(str(filename))
-        example = retrieve(dataset, query)
+        dataset = load_dataset(str(path / filename))
+        example = retrieve(dataset, query, filename)
         if example:
             show_main(example)
