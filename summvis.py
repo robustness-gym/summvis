@@ -131,7 +131,10 @@ def retrieve(dataset, index, filename=None):
                 formatted_model_name = model.upper()
             else:
                 formatted_model_name = f"{model.upper()} ({train_dataset.upper()}-trained)"
-                primary_sort = 1
+                if train_dataset in ["xsum", "cnndm"]:
+                    primary_sort = 1
+                else:
+                    primary_sort = 2
         else:
             formatted_model_name = model_name.upper()
         pred._.name = formatted_model_name
