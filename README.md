@@ -38,7 +38,7 @@ python preprocessing.py \
 --processed_dataset_path data/try:cnn_dailymail_1000.validation \
 --try_it
 ```
-This takes around 20 seconds on a MacBook Pro. 
+This takes around 10 seconds on a MacBook Pro. 
 
 ### 3. Run SummVis
 Finally, we're ready to run the Streamlit app. Once the app loads, make sure it's pointing to the right `File` at the top
@@ -52,8 +52,11 @@ streamlit run summvis.py
 ### 1. Download one of the pre-loaded datasets:
 
 ##### CNN / Daily Mail (1000 examples from validation set): https://storage.googleapis.com/sfr-summvis-data-research/cnn_dailymail_1000.validation.anonymized.zip
+##### CNN / Daily Mail (full validation set): https://storage.googleapis.com/sfr-summvis-data-research/cnn_dailymail.validation.anonymized.zip
 ##### XSum (1000 examples from validation set): https://storage.googleapis.com/sfr-summvis-data-research/xsum_1000.validation.anonymized.zip
+##### XSum (full validation set): https://storage.googleapis.com/sfr-summvis-data-research/xsum.validation.anonymized.zip
 
+We recommend that you choose the smallest dataset that fits your need in order to minimize download / preprocessing time.
 
 #### Example: Download and unzip CNN / Daily Mail
 ```shell
@@ -79,7 +82,7 @@ python preprocessing.py \
 --n_samples 100
 ```
 
-#### Example: Deanonymize all pre-loaded examples from CNN / Daily Mail:
+#### Example: Deanonymize all pre-loaded examples from CNN / Daily Mail (1000 examples dataset):
 ```shell
 python preprocessing.py \
 --deanonymize \
@@ -91,7 +94,18 @@ python preprocessing.py \
 --n_samples 1000
 ```
 
-#### Example: Deanonymize all pre-loaded examples from XSum:
+#### Example: Deanonymize all pre-loaded examples from CNN / Daily Mail (full dataset):
+```shell
+python preprocessing.py \
+--deanonymize \
+--dataset_rg preprocessing/cnn_dailymail.validation.anonymized \
+--dataset cnn_dailymail \
+--version 3.0.0 \
+--split validation \
+--processed_dataset_path data/full:cnn_dailymail.validation
+```
+
+#### Example: Deanonymize all pre-loaded examples from XSum (1000 examples dataset):
 ```shell
 python preprocessing.py \
 --deanonymize \
@@ -146,21 +160,24 @@ python preprocessing.py \
 
 ### 2. Add predictions to the saved dataset.
 Takes a saved dataset that has already been standardized and adds predictions to it 
-from prediction jsonl files. 
+from prediction jsonl files. Cached predictions for several models available here:
+ https://storage.googleapis.com/sfr-summvis-data-research/predictions.zip
+ 
+You may also generate your own predictions using this [this script](generation.py).
 
 #### Example: Add 6 prediction files for PEGASUS and BART to the dataset.
 ```shell
 python preprocessing.py \
 --join_predictions \
---dataset_jsonl preprocessing/cnn_dailymail_v3_validation.jsonl \
+--dataset_jsonl preprocessing/cnn_dailymail.validation.jsonl \
 --prediction_jsonls \
-anonymized/bart-cnndm.cnndm.validation.results.anonymized \
-anonymized/bart-xsum.cnndm.validation.results.anonymized \
-anonymized/pegasus-cnndm.cnndm.validation.results.anonymized \
-anonymized/pegasus-multinews.cnndm.validation.results.anonymized \
-anonymized/pegasus-newsroom.cnndm.validation.results.anonymized \
-anonymized/pegasus-xsum.cnndm.validation.results.anonymized \
---save_jsonl_path preprocessing/cnn_dailymail_v3_validation.jsonl
+predictions/bart-cnndm.cnndm.validation.results.anonymized \
+predictions/bart-xsum.cnndm.validation.results.anonymized \
+predictions/pegasus-cnndm.cnndm.validation.results.anonymized \
+predictions/pegasus-multinews.cnndm.validation.results.anonymized \
+predictions/pegasus-newsroom.cnndm.validation.results.anonymized \
+predictions/pegasus-xsum.cnndm.validation.results.anonymized \
+--save_jsonl_path preprocessing/cnn_dailymail.validation.jsonl
 ```
 
 ### 3. Run the preprocessing workflow and save the dataset.
