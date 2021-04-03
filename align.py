@@ -99,6 +99,8 @@ class EmbeddingAligner():
             targets: Target spaCy documents
         Returns: List of alignments, one for each target document
         """
+        if len(source) == 0:
+            return [{} for _ in targets]
         all_sents = list(source.sents) + list(itertools.chain.from_iterable(target.sents for target in targets))
         chunk_sizes = [_iter_len(source.sents)] + \
                       [_iter_len(target.sents) for target in targets]
