@@ -67,7 +67,7 @@ def retrieve(dataset, index):
         st.error(f"Index {index} exceeds dataset length.")
 
     data = dataset[index]
-    id_ = data['id']
+    id_ = data.get('id', '')
 
     try:
         document = rg_spacy.decode(
