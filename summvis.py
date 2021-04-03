@@ -69,9 +69,9 @@ def retrieve(dataset, index, filename=None):
     eval_dataset = None
     if filename:
         # TODO Handle this through dedicated fields
-        if filename.startswith("cnn_dailymail"):
+        if "cnn_dailymail" in filename:
             eval_dataset = "cnndm"
-        elif filename.startswith("xsum"):
+        elif "xsum" in filename:
             eval_dataset = "xsum"
 
     data = dataset[index]
