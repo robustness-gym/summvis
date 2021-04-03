@@ -54,13 +54,15 @@ def load_dataset(path: str):
     except NotADirectoryError:
         return Dataset.from_jsonl(path)
 
+
 @st.cache(allow_output_mutation=True)
 def get_nlp():
     nlp = spacy.load("en_core_web_lg")
     nlp.add_pipe('sentencizer', before="parser")
     return nlp
 
-def _retrieve(dataset, index):
+
+def retrieve(dataset, index):
     if index >= len(dataset):
         st.error(f"Index {index} exceeds dataset length.")
 
@@ -134,47 +136,6 @@ def _retrieve(dataset, index):
         preds=preds,
         index=data['index'] if 'index' in data else None,
         data=data,
-    )
-
-
-def retrieve(filename, index):
-    data = load_from_index(filename, index)
-    if not data:
-        st.error(f"Row index {index} is invalid")
-        return
-    id_ = data['id']
-    try:
-        text = data['document']
-    except KeyError:
-        text = data['article']
-    if not text:
-        st.error("Document is blank")
-        return
-    document = nlp(preprocess_text(text))
-    document._.name = "Document"
-
-    try:
-        text = data['summary']
-    except KeyError:
-        text = data['highlights']
-    reference = nlp(preprocess_text(text))
-    reference._.name = "Reference"
-
-    preds = []
-    for k, v in data.items():
-        if k.endswith('_prediction'):
-            model_name = k.replace('_prediction', '')
-            pred = nlp(preprocess_text(v))
-            pred._.name = model_name.upper()
-            preds.append(
-                pred
-            )
-    preds.sort(key=operator.attrgetter('_.name'))
-    return Instance(
-        id_=id_,
-        document=document,
-        reference=reference,
-        preds=preds
     )
 
 
@@ -376,7 +337,6 @@ if __name__ == "__main__":
 
     if query is not None:
         dataset = load_dataset(str(filename))
-        example = _retrieve(dataset, query)
-        # example = retrieve(filename, query)
+        example = retrieve(dataset, query)
         if example:
             show_main(example)
