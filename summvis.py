@@ -344,14 +344,15 @@ if __name__ == "__main__":
         file_index = 0
         col1, col2 = st.beta_columns((3, 1))
     filename = col1.selectbox(label="File:", options=files, index=file_index)
+    dataset = load_dataset(str(path / filename))
 
-    query = col2.number_input("Row index:", value=0, min_value=0)
+    dataset_size = len(dataset)
+    query = col2.number_input(f"Index (Size: {dataset_size}):", value=0, min_value=0, max_value=dataset_size - 1)
 
     sidebar_placeholder_from = st.sidebar.empty()
     sidebar_placeholder_to = st.sidebar.empty()
 
     if query is not None:
-        dataset = load_dataset(str(path / filename))
         example = retrieve(dataset, query, filename)
         if example:
             show_main(example)
