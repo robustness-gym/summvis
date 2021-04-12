@@ -212,7 +212,7 @@ def show_main(example):
         min_value=MIN_SEMANTIC_SIM_THRESHOLD,
         max_value=1.0,
         step=0.1,
-        value=0.3,
+        value=0.2,
     )
     semantic_sim_top_k = st.sidebar.slider(
         "Semantic similarity top-k:",

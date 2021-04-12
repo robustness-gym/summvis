@@ -190,9 +190,12 @@ body {
     visibility: visible;
 }
 
-.summary-item:not(.selected) .underline, .underline.annotation-inactive,
-.summary-item:not(.selectable) .underline {
-    border-color: #E0E0E0 !important;
+.summary-item:not(.selected) .underline, .summary-item:not(.selectable) .underline {
+    border-color: #909090 !important;
+}
+
+.underline.annotation-inactive {
+    border-color: #E9E9E9 !important;
 }
 
 .underline.annotation-invisible {
@@ -209,7 +212,7 @@ body {
 }
 
 .proxy-underline.annotation-inactive {
-    background-color: #E0E0E0 !important;
+    background-color: #E9E9E9 !important;
 }
 
 .proxy-underline.annotation-invisible {
@@ -231,9 +234,13 @@ body {
     border-color: transparent !important;
 }
 
-.highlight.annotation-inactive, .summary-item:not(.selected) .highlight:not(.annotation-hidden),
+.summary-item:not(.selected) .highlight:not(.annotation-hidden),
 .summary-item:not(.selectable) .highlight:not(.annotation-hidden) {
-    border-color: #E0E0E0 !important;
+    border-color: #909090 !important;
+}
+
+.highlight.annotation-inactive {
+    border-color: #E9E9E9 !important;
 }
 
 .display .proxy-scroll.hidden {
@@ -288,7 +295,7 @@ body {
 }
 
 .button-tab:hover {
-    background-color: #F0F0F0;
+    background-color: #E9E9E9;
 }
 
 .button-tab.active {
@@ -305,7 +312,7 @@ body {
 }
 
 .summary-item.show-entities .entity:not(.matches-ngram) {
-    color: #ff3333;
+    color: #fb425c;
 }
 
 .summary-item.show-lexical .highlight.matches-ngram {

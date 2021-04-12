@@ -40,6 +40,16 @@ $(document).ready(
             mainDoc.scrollTop(newTop * scaleY)
         }
 
+        function getSpanId(el) {
+            return getSpanIds(el)[0]
+        }
+
+        function getSpanIds(el) {
+            return el.attr("class").split(/\s+/).filter(function (x) {
+                return x.startsWith("span-")
+            });
+        }
+
         function createProxy() {
             const mainDoc = $(".display .main-doc");
             const proxyDoc = $(".display .proxy-doc");
@@ -70,10 +80,9 @@ $(document).ready(
                             proxyDoc.width() + proxyPadding / 2 - newX
                         );
 
-                        const spanId = el.data("span-id");
+                        let classes = "proxy-underline annotation-hidden " + getSpanIds(el).join(" ");
                         $('<div/>', {
-                            "class": 'proxy-underline annotation-hidden',
-                            "data-span-id": spanId,
+                            "class": classes,
                             "css": {
                                 "position": "absolute",
                                 "left": Math.round(newX),
@@ -81,7 +90,6 @@ $(document).ready(
                                 "background-color": color,
                                 "width": newWidth,
                                 "height": newHeight,
-
                             }
                         }).appendTo(proxyDoc);
                     }
@@ -263,6 +271,11 @@ $(document).ready(
         function resetUnderlines() {
             $('.annotation-invisible').removeClass("annotation-invisible");
             $('.annotation-inactive').removeClass("annotation-inactive");
+            $('.temp-underline-color')
+                .each(function () {
+                    $(this).css("border-color", $(this).data("primary-color"));
+                })
+                .removeClass("temp-underline-color")
         }
 
         function showDocTooltip(el) {
@@ -280,18 +293,18 @@ $(document).ready(
                 if (topHighlight.data("tooltip-timestamp") == tooltipTimestamp) {
                     topHighlight.tooltip("dispose");
                 }
-            }, 3000);
+            }, 15000);
         }
 
 
         function resetHighlights() {
             $('.summary-item.selected .annotation-inactive').removeClass("annotation-inactive");
             $('.summary-item.selected .annotation-invisible').removeClass("annotation-invisible");
-            $('.temp-color')
+            $('.temp-highlight-color')
                 .each(function () {
                     $(this).css("background-color", $(this).data("primary-color"));
                 })
-                .removeClass("temp-color")
+                .removeClass("temp-highlight-color")
             $('.highlight.selected').removeClass("selected")
             $('.proxy-highlight.selected').removeClass("selected")
             $('.summary-item [title]').removeAttr("title");
@@ -311,7 +324,7 @@ $(document).ready(
                     $(this).css("background-color", newHighlightColor);
                     $(this).addClass("selected");
                 })
-                .addClass("temp-color");
+                .addClass("temp-highlight-color");
             $(".underline").addClass("annotation-inactive");
             $(".proxy-underline").addClass("annotation-invisible")
             showDocTooltip(this);
@@ -383,17 +396,24 @@ $(document).ready(
             "mouseenter",
             activeUnderlines,
             function () {
-                const spanId = $(this).data("span-id");
+                const spanId = getSpanId($(this));
+                const color = $(this).css("border-color");
                 // TODO Consolidate into single statement
-                $(`.summary-item.selected .underline[data-span-id=${spanId}]`).removeClass("annotation-inactive");
-                $(`.doc .underline[data-span-id=${spanId}]`).removeClass("annotation-inactive");
-                $(`.proxy-underline[data-span-id=${spanId}]`).removeClass("annotation-inactive");
+                $(`.summary-item.selected .underline.${spanId}`).removeClass("annotation-inactive");
+                $(`.doc .underline.${spanId}`)
+                    .removeClass("annotation-inactive")
+                    .each(function () {
+                        $(this).css("border-color", color);
+                    })
+                    .addClass("temp-underline-color");
+                $(`.proxy-underline.${spanId}`).removeClass("annotation-inactive");
 
-                $(`.summary-item.selected .underline[data-span-id!=${spanId}]`).addClass("annotation-inactive");
-                $(`.doc .underline[data-span-id!=${spanId}]`).addClass("annotation-inactive");
-                $(`.proxy-underline[data-span-id!=${spanId}]`).addClass("annotation-inactive");
+                $(`.summary-item.selected .underline:not(.${spanId})`).addClass("annotation-inactive");
+                $(`.doc .underline:not(.${spanId})`).addClass("annotation-inactive");
+                $(`.proxy-underline:not(.${spanId})`).addClass("annotation-inactive");
 
                 $(".summary-item.selected .highlight:not(.annotation-hidden)").addClass("annotation-inactive");
+
             }
         );
         $(".summary-list").on(
@@ -407,8 +427,8 @@ $(document).ready(
             function () {
                 // Find aligned underline in doc  and scroll doc to that position
                 const mainDoc = $(".display .main-doc");
-                const spanId = $(this).data("span-id");
-                const matchedUnderline = $(`.doc .underline[data-span-id=${spanId}]`);
+                const spanId = getSpanId($(this));
+                const matchedUnderline = $(`.doc .underline.${spanId}`);
                 mainDoc.animate({
                         scrollTop: mainDoc.scrollTop() +
                             matchedUnderline.offset().top - mainDoc.offset().top - 60

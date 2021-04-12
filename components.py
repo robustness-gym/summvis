@@ -6,7 +6,7 @@ from typing import Union, List, Dict, Optional
 from htbuilder import span, div, script, style, link, HtmlElement, styles
 from spacy.tokens import Doc
 
-from textstyle import multi_underline
+from textstyle import MultiUnderline
 
 palette = [
     "#66c2a5",
@@ -104,6 +104,8 @@ def main_view(
     # Add document content, which comprises multiple elements, one for each summary. Only the elment corresponding to
     # selected summary will be visible.
 
+    mu = MultiUnderline()
+
     for summary_idx, summary in enumerate(summaries):
         token_idx_to_sent_idx = {}
         for sent_idx, sent in enumerate(summary.sents):
@@ -133,10 +135,11 @@ def main_view(
                 if matches:
                     summary_token_idx, sim = max(matches, key=itemgetter(1))
                     sent_idx = token_idx_to_sent_idx[summary_token_idx]
-                    primary_color = color_with_opacity(get_color(sent_idx), sim)
+                    color_primary = get_color(sent_idx)
+                    highlight_color_primary = color_with_opacity(color_primary, sim)
                     props = {
                         'data-highlight-id': str(doc_token_idx),
-                        'data-primary-color': primary_color
+                        'data-primary-color': highlight_color_primary
                     }
                     match_classes = []
                     for summary_token_idx, sim in matches:
@@ -147,8 +150,8 @@ def main_view(
                     props["data-match-classes"] = " ".join(match_classes)
                     el = highlight(
                         doc_token.text,
-                        primary_color,
-                        primary_color,
+                        highlight_color_primary,
+                        color_primary,
                         match_classes + ["annotation-hidden"],
                         **props
                     )
@@ -156,7 +159,7 @@ def main_view(
                     el = doc_token.text
             token_elements.append(el)
 
-        span_groups = [[] for _ in summary.sents]  # One group for each sentence
+        spans = []
         if lexical_alignments is not None:
             lexical_alignment = lexical_alignments[summary_idx]
             for summary_span, doc_spans in lexical_alignment.items():
@@ -164,8 +167,14 @@ def main_view(
                 span_id = f"{summary_idx}-{summary_span_start}-{summary_span_end}"
                 sent_idx = token_idx_to_sent_idx[summary_span_start]
                 for doc_span_start, doc_span_end in doc_spans:
-                    span_groups[sent_idx].append((doc_span_start, doc_span_end, span_id))
-        token_elements = multi_underline(token_elements, span_groups, palette)
+                    spans.append((
+                        doc_span_start,
+                        doc_span_end,
+                        sent_idx,
+                        get_color(sent_idx),
+                        span_id
+                    ))
+        token_elements = mu.markup(token_elements, spans)
 
         classes = ["main-doc", "bordered"]
         if scroll:
@@ -245,19 +254,22 @@ def main_view(
             for token in sent:
                 token_idx_to_sent_idx[token.i] = sent_idx
 
-        span_groups = [[] for _ in summary.sents]  # One group for each sentence
+        spans = []
+        matches_ngram = [False] * len(list(summary))
         if lexical_alignments is not None:
             lexical_alignment = lexical_alignments[summary_idx]
             for summary_span in lexical_alignment.keys():
                 start, end = summary_span
+                matches_ngram[slice(start, end)] = [True] * (end - start)
                 span_id = f"{summary_idx}-{start}-{end}"
                 sent_idx = token_idx_to_sent_idx[start]
-                span_groups[sent_idx].append((start, end, span_id))
-
-        matches_ngram = [False] * len(list(summary))
-        for sent_idx, spans in enumerate(span_groups):
-            for start, end, _ in spans:
-                matches_ngram[slice(start, end)] = [True] * (end - start)
+                spans.append((
+                    start,
+                    end,
+                    sent_idx,
+                    get_color(sent_idx),
+                    span_id
+                ))
 
         if semantic_alignments is not None:
             semantic_alignment = semantic_alignments[summary_idx]
@@ -306,7 +318,7 @@ def main_view(
                         el = token.text
             token_elements.append(el)
 
-        token_elements = multi_underline(token_elements, span_groups, palette)
+        token_elements = mu.markup(token_elements, spans)
 
         classes = ["summary-item"]
         if summary_idx == 0:  # Default is for first summary to be selected

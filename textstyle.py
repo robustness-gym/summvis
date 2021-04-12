@@ -1,6 +1,10 @@
+from collections import defaultdict
+from itertools import count
+from operator import itemgetter
 from typing import List, Tuple, Union
 
-from htbuilder import span, styles, HtmlElement
+import htbuilder
+from htbuilder import styles, HtmlElement
 from htbuilder.units import px
 
 
@@ -14,174 +18,156 @@ def color_with_opacity(hex_color, opacity):
     return f"rgba({rgb[0]},{rgb[1]},{rgb[2]},{opacity:.2f})"
 
 
-def highlight(
-        tokens: List[str],
-        opacities: List[float],
-        colors: List[str],
-        **kwargs
-):
-    return [
-        span(
-            style=styles(
-                background_color=color_with_opacity(color, opacity),
-                **kwargs
-            )
-        )(token) if opacity is not None else token
-        for token, opacity, color in zip(tokens, opacities, colors)
-    ]
+SPACE = "&ensp;"
 
 
-def multi_underline(
-        tokens: List[Union[str, HtmlElement]],
-        span_groups: List[List[Tuple[int, int, str]]],
-        group_colors: List[str],
-        underline_thickness=4,
+class MultiUnderline:
+    def __init__(
+        self,
+        underline_thickness=3,
         underline_spacing=1
-):
-    """Style text with multiple layers of colored underlines.
-        Args:
-            tokens: list of tokens
-            span_groups:
-                list of (one for each group)
-                    list of (start pos, end pos, id) spans
-                where highest level list is associated with a color at each position
-            group_colors: list of colors
-        Returns:
-            list of element elements
-    """
-    # TODO Add validity checks on spans (non-overlapping, don't exceed length of tokens)
-    # IOB encoding =  Inside-Outside-Begin dense encoding of spans for easier processing
-    n_groups = len(span_groups)
-    n_tokens = len(tokens)
-    n_colors = len(group_colors)
-    # Initialize IOB encoding to O (Outside)
-    iob_encodings = [['O'] * n_tokens for _ in range(n_groups)]  # n_groups x n_tokens
-    # Organize span ids by group / token position for easier retrieval later
-    span_ids = [[None] * n_tokens for _ in range(n_groups)]  # n_groups x n_tokens
-    for group_idx, spans in enumerate(span_groups):
-        spans = sorted(spans)
-        for span_start, span_end, span_id in spans:
-            iob_encodings[group_idx][span_start] = 'B'
-            iob_encodings[group_idx][span_start + 1:span_end] = ['I'] * (span_end - span_start - 1)
-            span_ids[group_idx][span_start:span_end] = [span_id] * (span_end - span_start)
+    ):
+        self.underline_thickness = underline_thickness
+        self.underline_spacing = underline_spacing
 
-    # Create list of nested html span elements that will render as multi-underlined text
+    def markup(
+        self,
+        tokens: List[Union[str, HtmlElement]],
+        spans: List[Tuple[int, int, int, str, str]]
+    ):
+        """Style text with multiple layers of colored underlines.
+            Args:
+                tokens: list of tokens, either string or html element
+                spans: list of (start_pos, end_pos, rank, color, id) tuples defined as:
+                    start_pos: start position of underline span
+                    end_pos: end position of underline span
+                    rank: rank for stacking order of underlines, all else being equal
+                    color: color of underline
+                    id: id of underline (encoded as a class label in resulting html element)
+            Returns:
+                List of HTML elements
+        """
 
-    elements = []
-    underline_slots = [None] * n_groups  # Slots that track which span group is at which underline depth
+        # Map from span start position to span
+        start_to_spans = defaultdict(list)
+        for span in spans:
+            start = span[0]
+            start_to_spans[start].append(span)
 
-    for token_idx, token in enumerate(tokens):
-        for group_idx in range(n_groups):
-            iob = iob_encodings[group_idx][token_idx]
-            if iob == 'B' or iob == 'O':
-                # Remove group from previous slot if starting new span or outside of a span
-                try:
-                    slot_idx = underline_slots.index(group_idx)
-                except ValueError:
-                    pass
-                else:
-                    underline_slots[slot_idx] = None
-        slot_colors = [None] * n_groups  # Color of underline at each depth
-        slot_ids = [None] * n_groups  # Associated span id at each underline depth
-        for slot_idx, group_idx in enumerate(underline_slots):
-            if group_idx is None:
-                continue
-            slot_colors[slot_idx] = group_colors[group_idx % n_colors]
-            slot_ids[slot_idx] = span_ids[group_idx][token_idx]
+        # Map from each underline slot position to list of active spans
+        slot_to_spans = {}
 
-        # Add underlined space between tokens
-        if token_idx > 0:
-            elements.append(
-                _multi_underline_span('&ensp;', slot_colors, slot_ids, underline_thickness, underline_spacing, False)
+        # Collection of html elements
+        elements = []
+
+        for pos, token in enumerate(tokens):
+            # Remove spans that are no longer active (end < pos)
+            slot_to_spans = defaultdict(
+                list,
+                {
+                    slot: [span for span in spans if span[1] > pos]  # span[1] contains end of spans
+                    for slot, spans in slot_to_spans.items() if spans
+                }
             )
 
-        # Set underline slot for any new spans
-        for group_idx in range(n_groups):
-            iob = iob_encodings[group_idx][token_idx]
-            if iob == 'B':
-                # Find next available underline slot
-                for k in range(len(underline_slots)):
-                    if underline_slots[k] is None:
-                        underline_slots[k] = group_idx
-                        break
+            # Add underlines to space between tokens for any continuing underlines
+            if pos > 0:
+                elements.append(self._get_underline_element(SPACE, slot_to_spans))
 
-        slot_colors = [None] * n_groups  # Color of underline at each depth
-        slot_ids = [None] * n_groups  # Associated span id at each underline depth
-        for slot_idx, group_idx in enumerate(underline_slots):
-            if group_idx is None:
-                continue
-            slot_colors[slot_idx] = group_colors[group_idx % n_colors]
-            slot_ids[slot_idx] = span_ids[group_idx][token_idx]
+            # Find slot for any new spans
+            new_spans = start_to_spans.pop(pos, None)
+            if new_spans:
+                new_spans.sort(key=lambda span: (-(span[1] - span[0]), span[2]))  # Sort by span length (reversed), rank
+                for new_span in new_spans:
+                    # Find an existing slot or add a new one
+                    for slot, spans in sorted(slot_to_spans.items(), key=itemgetter(0)):  # Sort by slot index
+                        if spans:
+                            containing_span = spans[0]  # The first span in the slot strictly contains all other spans
+                            containing_start, containing_end = containing_span[0:2]
+                            containing_color = containing_span[3]
+                            start, end = new_span[0:2]
+                            color = new_span[3]
+                            # If the new span (1) is strictly contained in this span, or (2) exactly matches this span
+                            # and is the same color, then add span to this slot
+                            if end <= containing_end and (
+                                (start > containing_start or end < containing_end) or
+                                (start == containing_start and end == containing_end and color == containing_color)
+                            ):
+                                spans.append(new_span)
+                                break
+                    else:
+                        # Find a new slot index to add the span
+                        for slot_index in count():
+                            spans = slot_to_spans[slot_index]
+                            if not spans:  # If slot is free, take it
+                                spans.append(new_span)
+                                break
 
-        elements.append(
-            _multi_underline_span(token, slot_colors, slot_ids, underline_thickness, underline_spacing, True)
-        )
-    return elements
+            # Add underlines to token for all active spans
+            elements.append(self._get_underline_element(token, slot_to_spans))
+        return elements
 
+    def _get_underline_element(self, token, slot_to_spans):
+        if not slot_to_spans:
+            return token
+        max_slot_index = max(slot_to_spans.keys())
+        element = token
+        for slot_index in range(max_slot_index + 1):
+            spans = slot_to_spans[slot_index]
+            if not spans:
+                color = "rgba(0, 0, 0, 0)"  # Transparent element w/opacity=0
+                props = {}
+            else:
+                containing_slot = spans[0]
+                color = containing_slot[3]
+                classes = ["underline"]
+                if token != SPACE:
+                    classes.append("token-underline")
+                classes.extend([f"span-{span[4]}" for span in spans])  # Encode ids in class names
+                props = {
+                    "class": " ".join(classes),
+                    "data-primary-color": color
+                }
+            if slot_index == 0:
+                padding_bottom = 0
+            else:
+                padding_bottom = self.underline_spacing
+            display = "inline-block"
+            element = htbuilder.span(
+                style=styles(
+                    display=display,
+                    border_bottom=f"{self.underline_thickness}px solid",
+                    border_color=color,
+                    padding_bottom=px(padding_bottom),
+                ),
+                **props
+            )(element)
 
-def _multi_underline_span(token, slot_colors, slot_ids, underline_thickness, underline_spacing, is_token):
-    element = token
-    # Get index of last non-null element
-    last_index = None
-    for i, color in reversed(list(enumerate(slot_colors))):
-        if color is not None:
-            last_index = i
-            break
-    if last_index is None:
-        # No active underlines, simply return plain text
+            # Return outermost nested span
         return element
-    slot_colors = slot_colors[:last_index + 1]  # Truncate trailing null elements
-    for underline_level, (slot_color, slot_id) in enumerate(zip(slot_colors, slot_ids)):
-        if slot_color is None:
-            color = "rgba(0, 0, 0, 0)"  # Transparent element w/opacity=0
-            props = {}
-        else:
-            color = slot_color
-            classes = ["underline"]
-            if is_token:
-                classes.append("token-underline")
-            props = {"data-span-id": slot_id,
-                     "class": " ".join(classes)}
-        if underline_level == 0:
-            padding_bottom = 0
-        else:
-            padding_bottom = underline_spacing
-        display = "inline-block"
-
-        element = span(
-            style=styles(
-                display=display,
-                border_bottom=f"{underline_thickness}px solid",
-                border_color=color,
-                padding_bottom=px(padding_bottom),
-            ),
-            **props
-        )(element)
-
-    # Return outermost nested span
-    return element
 
 
 if __name__ == "__main__":
+    from htbuilder import div
+
     # Test
     text = "The quick brown fox jumps"
     tokens = text.split()
     tokens = [
         "The",
-        span(style=styles(color="red"))("quick"),
+        htbuilder.span(style=styles(color="red"))("quick"),
         "brown",
         "fox",
         "jumps"
     ]
     spans = [
-        [(0, 2), (3, 4)],  # green
-        [(1, 3)],  # orange
-        [(2, 4)],  # blue
-    ]
-    colors = [
-        "#66c2a5",  # green
-        "#fc8d62",  # orange
-        "#8da0cb",  # blue
+        (0, 2, 0, "green", "green1"),
+        (1, 3, 0, "orange", "orange1"),
+        (3, 4, 0, "red", "red1"),
+        (2, 4, 0, "blue", "blue1"),
+        (1, 5, 0, "orange", "orange1"),
     ]
 
-    out = multi_underline(tokens, spans, group_colors=colors)
+    mu = MultiUnderline()
+    html = str(div(mu.markup(tokens, spans)))
+    print(html)

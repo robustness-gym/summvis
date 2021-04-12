@@ -154,6 +154,7 @@ class BertscoreAligner(EmbeddingAligner):
             embedding, threshold, top_k, baseline_val
         )
 
+
 class StaticEmbeddingAligner(EmbeddingAligner):
     def __init__(
         self,
@@ -234,22 +235,17 @@ class NGramAligner():
             spans_1 = ngram_spans_1[key]
             spans_2 = ngram_spans_2[key]
             available_spans_1 = [span for span in spans_1 if all(token_is_available_1[slice(*span)])]
+            available_spans_2 = [span for span in spans_2 if all(token_is_available_2[slice(*span)])]
             matched_spans_1 = []
             matched_spans_2 = []
-            if available_spans_1:
+            if available_spans_1 and available_spans_2:
                 # if ngram can be matched to available spans in both sequences
                 for span in available_spans_1:
                     # It's possible that these newly matched spans may be overlapping with one another, so
-                    # check that token positions still available:
+                    # check that token positions still available (only one span allowed ber token in text 1):
                     if all(token_is_available_1[slice(*span)]):
                         matched_spans_1.append(span)
                         token_is_available_1[slice(*span)] = [False] * (span[1] - span[0])
-                for span in spans_2:
-                    # It's possible that these newly matched spans may be overlapping with one another, so
-                    # check that token positions still available:
-                    # if all(token_is_available_2[slice(*span)]):
-                    matched_spans_2.append(span)
-                    # token_is_available_2[slice(*span)] = [False] * (span[1] - span[0])
             for span1 in matched_spans_1:
                 alignment[span1] = matched_spans_2
 
