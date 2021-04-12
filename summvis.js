@@ -6,8 +6,6 @@ $(document).ready(
         let isDragging = false;
         let saveDragPos;
 
-        let mouseOverHighlight = false;
-
         let rtime;
         let timeout = false;
         let delta = 200;
@@ -81,7 +79,7 @@ $(document).ready(
                         );
 
                         let classes = "proxy-underline annotation-hidden " + getSpanIds(el).join(" ");
-                        $('<div/>', {
+                        const proxyEl = $('<div/>', {
                             "class": classes,
                             "css": {
                                 "position": "absolute",
@@ -92,6 +90,7 @@ $(document).ready(
                                 "height": newHeight,
                             }
                         }).appendTo(proxyDoc);
+                        proxyEl.data(el.data());
                     }
                 );
             }
@@ -276,6 +275,11 @@ $(document).ready(
                     $(this).css("border-color", $(this).data("primary-color"));
                 })
                 .removeClass("temp-underline-color")
+            $('.temp-proxy-underline-color')
+                .each(function () {
+                    $(this).css("background-color", $(this).data("primary-color"));
+                })
+                .removeClass("temp-proxy-underline-color")
         }
 
         function showDocTooltip(el) {
@@ -311,7 +315,6 @@ $(document).ready(
         }
 
         function highlightToken() {
-            mouseOverHighlight = true;
             const highlightId = $(this).data("highlight-id");
             $(`.summary-item.selected .highlight:not(.summary-highlight-${highlightId})`).addClass("annotation-inactive");
             $('.highlight.selected').removeClass("selected")
@@ -406,7 +409,12 @@ $(document).ready(
                         $(this).css("border-color", color);
                     })
                     .addClass("temp-underline-color");
-                $(`.proxy-underline.${spanId}`).removeClass("annotation-inactive");
+                $(`.proxy-underline.${spanId}`)
+                    .removeClass("annotation-inactive")
+                    .each(function () {
+                        $(this).css("background-color", color);
+                    })
+                    .addClass("temp-proxy-underline-color");
 
                 $(`.summary-item.selected .underline:not(.${spanId})`).addClass("annotation-inactive");
                 $(`.doc .underline:not(.${spanId})`).addClass("annotation-inactive");
@@ -451,16 +459,8 @@ $(document).ready(
             activeHighlights,
             function () {
                 removeDocTooltips();
-                mouseOverHighlight = false;
-                setTimeout( // set delay on effect of mouseleave in case another mouseover happens within time. Avoids jumpiness in interaction.
-                    function () {
-                        if (mouseOverHighlight == false) {
-                            resetHighlights();
-                            resetUnderlines();
-                        }
-                    },
-                    100
-                );
+                resetHighlights();
+                resetUnderlines();
             }
         );
         $(".summary-list").on(
