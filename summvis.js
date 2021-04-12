@@ -400,13 +400,13 @@ $(document).ready(
             activeUnderlines,
             function () {
                 const spanId = getSpanId($(this));
-                const color = $(this).css("border-color");
+                const color = $(this).css("border-bottom-color");
                 // TODO Consolidate into single statement
                 $(`.summary-item.selected .underline.${spanId}`).removeClass("annotation-inactive");
                 $(`.doc .underline.${spanId}`)
                     .removeClass("annotation-inactive")
                     .each(function () {
-                        $(this).css("border-color", color);
+                        $(this).css("border-bottom-color", color);
                     })
                     .addClass("temp-underline-color");
                 $(`.proxy-underline.${spanId}`)
