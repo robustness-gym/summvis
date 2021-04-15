@@ -12,9 +12,10 @@ $(document).ready(
 
         let disableScrollEvent = false;
 
-        let showLexical = false;
-        let showSemantic = false;
-        let showEntities = false;
+        let annotateLexical = false;
+        let annotateSemantic = false;
+        let annotateNovel = false;
+        let annotateEntities = false;
 
         // Define functions
 
@@ -62,7 +63,7 @@ $(document).ready(
             proxyDoc.empty();
 
             // Loop through underlines in doc view and create associated proxy element
-            if (showLexical) {
+            if (annotateLexical) {
                 $(".display .main-doc .token-underline").each(
                     function (index, value) {
                         const el = $(value);
@@ -96,7 +97,7 @@ $(document).ready(
             }
 
             // Loop through all active highlights in doc view and create associated proxy element
-            if (showSemantic) {
+            if (annotateSemantic) {
                 $(".display .main-doc .highlight").each(
                     function (index, value) {
                         const el = $(value);
@@ -203,57 +204,55 @@ $(document).ready(
 
         function updateAnnotations() {
 
-            showSemantic = $("#option-semantic").is(":checked");
-            showLexical = $("#option-lexical").is(":checked");
-            showEntities = $("#option-entities").is(":checked");
+            annotateSemantic = $("#option-semantic").hasClass("selected");
+            annotateLexical = $("#option-lexical").hasClass("selected");
+            annotateEntities = $("#option-entity").hasClass("selected");
+            annotateNovel = $("#option-novel").hasClass("selected");
 
-            if (showSemantic || showLexical) {
+            if (annotateSemantic || annotateLexical) {
                 $(".summary-item").addClass("selectable")
             } else {
                 $(".summary-item").removeClass("selectable")
             }
 
-            if (showSemantic || showLexical || showEntities) {
-                $(".summary-item").addClass("annotated");
-                $(".display .main-doc").addClass("annotated");
-            } else {
-                $(".summary-item").removeClass("annotated");
-                $(".display .main-doc").removeClass("annotated");
-            }
-
-            if (showLexical) {
+            if (annotateLexical) {
                 $(".underline").removeClass("annotation-hidden");
-                $(".summary-item").addClass("show-lexical");
+                $(".summary-item").addClass("annotate-lexical");
             } else {
                 $(".underline").addClass("annotation-hidden");
-                $(".summary-item").removeClass("show-lexical");
+                $(".summary-item").removeClass("annotate-lexical");
             }
-            if (showSemantic) {
+            if (annotateSemantic) {
                 $(".highlight").removeClass("annotation-hidden");
             } else {
                 $(".highlight").addClass("annotation-hidden");
             }
-            if (showEntities) {
-                $(".summary-item").addClass("show-entities")
+            if (annotateEntities) {
+                $(".summary-item").addClass("annotate-entities")
             } else {
-                $(".summary-item").removeClass("show-entities")
+                $(".summary-item").removeClass("annotate-entities")
+            }
+            if (annotateNovel) {
+                $(".summary-item").addClass("annotate-novel")
+            } else {
+                $(".summary-item").removeClass("annotate-novel")
             }
 
             createProxy();
 
-            if (showLexical) {
+            if (annotateLexical) {
                 $(".proxy-underline").removeClass("annotation-hidden");
             } else {
                 $(".proxy-underline").addClass("annotation-hidden");
             }
-            if (showSemantic) {
+            if (annotateSemantic) {
                 $(".proxy-highlight").removeClass("annotation-hidden");
             } else {
                 $(".proxy-highlight").addClass("annotation-hidden");
             }
 
             $(".summary-item .highlight").tooltip("disable");
-            if (showSemantic) {
+            if (annotateSemantic) {
                 $(".summary-item.selected .highlight").tooltip("enable")
             }
         }
@@ -385,13 +384,20 @@ $(document).ready(
         );
 
         $("#option-lexical").click(function () {
-            updateAnnotations();
+            $(this).toggleClass("selected")
+            updateAnnotations()
         });
         $("#option-semantic").click(function () {
-            updateAnnotations();
+            $(this).toggleClass("selected")
+            updateAnnotations()
         });
-        $("#option-entities").click(function () {
-            updateAnnotations();
+        $("#option-novel").click(function () {
+            $(this).toggleClass("selected")
+            updateAnnotations()
+        });
+        $("#option-entity").click(function () {
+            $(this).toggleClass("selected")
+            updateAnnotations()
         });
 
         const activeUnderlines = ".summary-item.selected .underline:not(.annotation-inactive):not(.annotation-hidden)";
@@ -447,7 +453,7 @@ $(document).ready(
         );
 
         const activeHighlights = ".summary-item.selected .highlight:not(.annotation-hidden):not(.matches-ngram), " +
-            ".summary-item.selected:not(.show-lexical) .highlight:not(.annotation-hidden)";
+            ".summary-item.selected:not(.annotate-lexical) .highlight:not(.annotation-hidden)";
         $(".summary-list").on(
             "mouseenter",
             activeHighlights,
@@ -498,6 +504,5 @@ $(document).ready(
             },
         );
     }
-)
-;
+);
 

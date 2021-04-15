@@ -224,7 +224,11 @@ def show_main(example):
 
     document, summaries = select_comparison(example)
     layout = st.sidebar.radio("Layout:", ["Vertical", "Horizontal"]).lower()
-    scroll = st.sidebar.checkbox(label="Scroll sections", value=True)
+    # if layout == "horizontal":
+    #     scroll = st.sidebar.checkbox(label="Scroll sections", value=True)
+    # else:
+    scroll = True
+    grey_stopwords = st.sidebar.checkbox(label="Grey out stopwords", value=True)
 
     # Gather data
     try:
@@ -309,9 +313,10 @@ def show_main(example):
             semantic_alignments,
             lexical_alignments,
             layout,
-            scroll
+            scroll,
+            grey_stopwords
         ),
-        height=690
+        height=850
     )
 
 

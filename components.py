@@ -86,7 +86,8 @@ def main_view(
     semantic_alignments: Optional[List[Dict]],
     lexical_alignments: Optional[List[Dict]],
     layout: str,
-    scroll: bool
+    scroll: bool,
+    grey_out_stopwords: bool
 ):
     # Add document elements
 
@@ -125,11 +126,16 @@ def main_view(
         token_elements = []
         for doc_token_idx, doc_token in enumerate(document):
             if doc_token.is_stop or doc_token.is_punct:
-                el = span(
-                    _class="stopword"
-                )(
-                    doc_token.text
-                )
+                if grey_out_stopwords:
+                    el = span(
+                        _class="stopword"
+                    )(
+                        doc_token.text
+                    )
+                else:
+                    el = span()(
+                        doc_token.text
+                    )
             else:
                 matches = doc_token_idx_to_matches.get(doc_token_idx)
                 if matches:
@@ -204,47 +210,12 @@ def main_view(
             )
         )
 
-    # If both semantic and lexical alignments available, add a radio button to choose
-    if semantic_alignments is not None and lexical_alignments is not None:
-        annotation_selection = """
-        <div class="checkbox-row">
-            <div class="mr-2">
-                <label class="small mb-0 font-weight-bold">Comparison:</label>
-            </div>
-            <div>
-                <div class="form-check form-check-inline align-middle mr-2">
-                    <input class="form-check-input" type="checkbox" id="option-lexical" value="option-lexical" checked>
-                    <label class="form-check-label small" for="option-lexical">N-Gram Overlap</label>
-                </div>
-                <div class="form-check form-check-inline align-middle mr-2">
-                    <input class="form-check-input" type="checkbox" id="option-semantic" value="option-semantic" checked>
-                    <label class="form-check-label small" for="option-semantic">Semantic Sim.</label>
-                </div>
-                <div class="form-check form-check-inline align-middle mr-2">
-                    <input class="form-check-input" type="checkbox" id="option-entities" value="option-semantic" checked>
-                    <label class="form-check-label small" for="option-entities">Novel Entities</label>
-                </div>
-            </div>
-        </div>
-    """
-    elif lexical_alignments is not None:
-        annotation_selection = "Highlight: N-Gram Overlap"
-    elif semantic_alignments is not None:
-        annotation_selection = "Highlight: Semantic Similarity"
-    else:
-        annotation_selection = ""
-
     summary_title = "Summary"
     summary_header = div(
         id_="summary-header"
     )(
         summary_title,
         div(id="summary-header-gap"),
-        div(
-            id="annotation-selection"
-        )(
-            annotation_selection
-        )
     )
 
     summary_items = []
@@ -278,11 +249,16 @@ def main_view(
         token_elements = []
         for token_idx, token in enumerate(summary):
             if token.is_stop or token.is_punct:
-                el = span(
-                    _class="stopword"
-                )(
-                    token.text
-                )
+                if grey_out_stopwords:
+                    el = span(
+                        _class="stopword"
+                    )(
+                        token.text
+                    )
+                else:
+                    el = span()(
+                        token.text
+                    )
             else:
                 classes = []
                 if token.ent_iob_ in ('I', 'B'):
@@ -345,23 +321,46 @@ def main_view(
         summary_items
     )
 
-    body = div(
-        _class=f"vis-container {layout}-layout"
-    )(
-        div(
-            _class="doc-container"
-        )(
-            doc_header,
-            *doc_elements
-        ),
-        div(
-            _class="summary-container"
-        )(
-            summary_header,
-            summary_list
-        )
-    )
+    annotation_key = \
+        """
+          <ul class="annotation-key">
+            <li class="annotation-key-label">Annotations:</li>
+            <li id="option-lexical" class="option selected">
+                <span class="annotation-key-ngram">N-Gram overlap</span>
+            </li>
+            <li id="option-semantic" class="option selected">
+                <span class="annotation-key-semantic">Semantic overlap</span>
+            </li>
+            <li id="option-novel" class="option selected">
+                <span class="annotation-key-novel">Novel words</span>
+            </li>
+            <li id="option-entity" class="option selected">
+                <span class="annotation-key-entity">Novel entities</span>
+            </li>
+    
+        </ul>
+        """
 
+    body = div(
+        annotation_key,
+        div(
+            _class=f"vis-container {layout}-layout"
+        )(
+            div(
+                _class="doc-container"
+            )(
+                doc_header,
+                *doc_elements
+            ),
+            div(
+                _class="summary-container"
+            )(
+                summary_header,
+                summary_list
+            )
+        ),
+
+    )
     return [
         """<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css"
          integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" 

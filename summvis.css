@@ -4,6 +4,10 @@ body {
     line-height: 1.5;
     color: #262730;
     font-weight: 400;
+}
+
+.vis-container {
+    height: 670px;
     background-color: #F5F7F9;
 }
 
@@ -13,10 +17,6 @@ body {
 
 .scroll {
     overflow-y: scroll;
-}
-
-.vis-container {
-    height: 600px;
 }
 
 .doc-container {
@@ -138,7 +138,6 @@ body {
 }
 
 .summary-item.selected.selectable {
-    color: black;
     border-left: 3px solid #2377E9;
     padding-left: 21px;
 }
@@ -169,13 +168,14 @@ body {
     opacity: 0.5 !important;
 }
 
-.annotated .stopword {
+.stopword {
     opacity: 50%
 }
 
-.has-lexical-alignment .summary-item.annotated {
+.has-lexical-alignment .annotate-novel {
     /* Bold all non-underlined items */
     font-weight: 500;
+    color: black;
 }
 
 .summary-item .stopword {
@@ -184,10 +184,6 @@ body {
 
 .summary-item .token-underline {
     font-weight: 400;
-}
-
-.visible {
-    visibility: visible;
 }
 
 .summary-item:not(.selected) .underline, .summary-item:not(.selectable) .underline {
@@ -247,11 +243,6 @@ body {
     visibility: hidden;
 }
 
-.shade-top, .shade-bottom {
-    position: absolute;
-    background-color: #ebebeb;
-}
-
 #document-header {
     min-height: 35px;
     margin-bottom: 0px;
@@ -277,32 +268,6 @@ body {
     flex: 1 0 15px;
 }
 
-#annotation-selection {
-    font-size: 16px;
-    color: #505050
-}
-
-.button-tab-group {
-    display: flex;
-}
-
-.button-tab {
-    color: #666;
-    font-size: 14px;
-    cursor: pointer;
-    text-align: center;
-    padding: 1px 7px;
-}
-
-.button-tab:hover {
-    background-color: #E9E9E9;
-}
-
-.button-tab.active {
-    border-bottom: 2px solid #1a73e8;
-    color: black;
-}
-
 .highlight.selected {
     border-color: transparent !important;
 }
@@ -311,11 +276,12 @@ body {
     background-color: transparent !important;
 }
 
-.summary-item.show-entities .entity:not(.matches-ngram) {
+.summary-item.annotate-entities .entity:not(.matches-ngram) {
     color: #fb425c;
+    font-weight: 500;
 }
 
-.summary-item.show-lexical .highlight.matches-ngram {
+.summary-item.annotate-lexical .highlight.matches-ngram {
     padding: 0px;
     border-bottom: 0px !important;
 }
@@ -325,7 +291,57 @@ body {
     border: 0px !important;
 }
 
-.checkbox-row {
+ul.annotation-key {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
+    list-style: none;
+    justify-content: flex-start;
+    padding: 0px;
+    margin: 0px 0px 10px 0px;
+}
+
+.annotation-key li {
+    margin-right: 15px;
+    font-size: 13px;
+    padding: 6px 13px 6px 13px;
+}
+
+.annotation-key li.option {
+    border-radius: 13px;
+    cursor: pointer;
+    border: 1px solid #F3F3F3;
+}
+
+.annotation-key li.option.selected {
+    background-color: #F0F2F6;
+}
+
+.annotation-key-label {
+    margin: 0px;
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+}
+
+.annotation-key-ngram {
+    border-bottom: 3px solid #66c2a5;
+    padding-bottom: 1px;
+}
+
+.annotation-key-semantic {
+    border-bottom: 4px dotted #66c2a5;
+    padding-bottom: 1px;
+}
+
+.annotation-key-novel {
+    font-weight: 500;
+    color: black;
+}
+
+.annotation-key-entity {
+    font-weight: 500;
+    color: #fb425c;
+}
+
+.annotation-key-stopword {
+    opacity: 70%;
 }
