@@ -202,4 +202,20 @@ python preprocessing.py \
 --processed_dataset_path data/cnn_dailymail
 ```
 
+## Citation
+
+When referencing this repository, please cite [this paper](https://arxiv.org/abs/2104.07605):
+
+```
+@misc{vig2021summvis,
+      title={SummVis: Interactive Visual Analysis of Models, Data, and Evaluation for Text Summarization}, 
+      author={Jesse Vig and Wojciech Kryscinski and Karan Goel and Nazneen Fatema Rajani},
+      year={2021},
+      eprint={2104.07605},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2104.07605}
+}
+```
+
 
