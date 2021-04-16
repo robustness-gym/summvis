@@ -43,7 +43,7 @@ python preprocessing.py \
 --processed_dataset_path data/try:cnn_dailymail_1000.validation \
 --try_it
 ```
-This takes around 10 seconds on a MacBook Pro. 
+This may take a few minutes.
 
 ### 3. Run SummVis
 Finally, we're ready to run the Streamlit app. Once the app loads, make sure it's pointing to the right `File` at the top
