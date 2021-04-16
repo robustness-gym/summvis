@@ -223,8 +223,8 @@ When referencing this repository, please cite [this paper](https://arxiv.org/abs
 }
 ```
 
-## Acknowledgement
+## Acknowledgements
 
-We thank [Michael Correll](correll.io) for his valuable feedback.
+We thank [Michael Correll](http://correll.io) for his valuable feedback.
 
 
