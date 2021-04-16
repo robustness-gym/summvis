@@ -8,4 +8,4 @@ rouge-score==0.0.4
 toolz==0.11.1
 nltk==3.4.5
 robustnessgym==0.0.4a0
-sentencepiece-0.1.95
+sentencepiece==0.1.95
