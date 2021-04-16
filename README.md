@@ -1,8 +1,8 @@
 # SummVis
 SummVis is an interactive visualization tool for analyzing abstractive summarization model outputs and datasets.
+
 <p align="center">
-  <img src="https://raw.githubusercontent.com/robustness-gym/summvis/master/images/triangle.jpg" height="350" alt="Figure"/>
-  <img src="https://raw.githubusercontent.com/robustness-gym/summvis/master/images/main-vis.png" height="350" alt="SummVis Interface"/>
+  <img src="https://raw.githubusercontent.com/robustness-gym/summvis/master/images/main-vis.jpg" width="1000" alt="Figure"/>
 </p>
 
 
