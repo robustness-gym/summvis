@@ -140,12 +140,6 @@ Note that the additional `--` is not a mistake, and is required to pass command-
 You can also perform preprocessing end-to-end to load any summarization dataset or model predictions into SummVis. 
 Instructions for this are provided below. 
 
-Prior to running the following, an additional install step is required:
-
-```
-python -m spacy download en_core_web_lg
-```
-
 ### 1. Standardize and save dataset to disk.
 Loads in a dataset from HF, or any dataset that you have and stores it in a 
 standardized format with columns for `document` and `summary:reference`.  
