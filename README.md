@@ -12,7 +12,7 @@ SummVis is an interactive visualization tool for analyzing abstractive summariza
 git clone https://github.com/robustness-gym/summvis.git
 cd summvis
 pip install -r requirements.txt
-python -m spacy download en_core_web_sm
+python -m spacy download en_core_web_lg
 ```
 
 ## Quickstart
