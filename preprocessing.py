@@ -256,7 +256,11 @@ def deanonymize_dataset(
     )
 
     # Run the Spacy pipeline on all preprocessed text columns
-    nlp = load('en_core_web_lg')
+    try:
+        nlp = load('en_core_web_lg')
+    except OSError:
+        nlp = load('en_core_web_sm')
+
     nlp.add_pipe('sentencizer', before="parser")
     spacy = Spacy(nlp=nlp)
     dataset = spacy(
