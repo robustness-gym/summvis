@@ -57,9 +57,15 @@ def load_dataset(path: str):
 
 @st.cache(allow_output_mutation=True)
 def get_nlp():
-    nlp = spacy.load("en_core_web_lg")
+    try:
+        nlp = spacy.load("en_core_web_lg")
+    except:
+        nlp = spacy.load("en_core_web_sm")
+        is_lg = False
+    else:
+        is_lg = True
     nlp.add_pipe('sentencizer', before="parser")
-    return nlp
+    return nlp, is_lg
 
 
 def retrieve(dataset, index, filename=None):
@@ -82,6 +88,9 @@ def retrieve(dataset, index, filename=None):
             data[rg_spacy.identifier(columns=['preprocessed_document'])]
         )
     except KeyError:
+        if not is_lg:
+            st.error("'en_core_web_lg model' is required unless loading from cached file."
+                     "To install: 'python -m spacy download en_core_web_lg'")
         try:
             text = data['document']
         except KeyError:
@@ -98,6 +107,9 @@ def retrieve(dataset, index, filename=None):
             data[rg_spacy.identifier(columns=['preprocessed_summary:reference'])]
         )
     except KeyError:
+        if not is_lg:
+            st.error("'en_core_web_lg model' is required unless loading from cached file."
+                     "To install: 'python -m spacy download en_core_web_lg'")
         try:
             text = data['summary'] if 'summary' in data else data['summary:reference']
         except KeyError:
@@ -121,6 +133,9 @@ def retrieve(dataset, index, filename=None):
                 data[rg_spacy.identifier(columns=[f"preprocessed_summary:{model_name}"])]
             )
         except KeyError:
+            if not is_lg:
+                st.error("'en_core_web_lg model' is required unless loading from cached file."
+                         "To install: 'python -m spacy download en_core_web_lg'")
             pred = nlp(preprocess_text(data[f"summary:{model_name}"]))
 
         parts = model_name.split("-")
@@ -329,7 +344,7 @@ if __name__ == "__main__":
     parser.add_argument('--file', type=str)
     args = parser.parse_args()
 
-    nlp = get_nlp()
+    nlp, is_lg = get_nlp()
 
     Spacy.encode = _spacy_encode
     Spacy.decode = _spacy_decode

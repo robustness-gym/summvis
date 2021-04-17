@@ -7,12 +7,12 @@ SummVis is an interactive visualization tool for analyzing abstractive summariza
 
 
 ## Installation
-Please use `python>=3.8` since some dependencies require that for installation.
+**IMPORTANT**: Please use `python>=3.8` since some dependencies require that for installation.
 ```zsh
 git clone https://github.com/robustness-gym/summvis.git
 cd summvis
 pip install -r requirements.txt
-python -m spacy download en_core_web_lg
+python -m spacy download en_core_web_sm
 ```
 
 ## Quickstart
@@ -43,7 +43,8 @@ python preprocessing.py \
 --processed_dataset_path data/try:cnn_dailymail_1000.validation \
 --try_it
 ```
-This may take a few minutes.
+This will take between 10 seconds and several minutes depending on whether you've previously loaded CNN/DailyMail from 
+the Datasets library.
 
 ### 3. Run SummVis
 Finally, we're ready to run the Streamlit app. Once the app loads, make sure it's pointing to the right `File` at the top
@@ -138,6 +139,12 @@ Note that the additional `--` is not a mistake, and is required to pass command-
 ## Get your data into SummVis: end-to-end preprocessing
 You can also perform preprocessing end-to-end to load any summarization dataset or model predictions into SummVis. 
 Instructions for this are provided below. 
+
+Prior to running the following, an additional install step is required:
+
+```
+python -m spacy download en_core_web_lg
+```
 
 ### 1. Standardize and save dataset to disk.
 Loads in a dataset from HF, or any dataset that you have and stores it in a 
