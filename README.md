@@ -1,14 +1,30 @@
-# SummVis
-SummVis is an interactive visualization tool for analyzing abstractive summarization model outputs and datasets.
+SummVis is an interactive visualization tool for abstractive summarization models, supporting analysis of models,
+data, and evaluation metrics. Please refer to the following for additional details:
 
-📖 [Paper](https://arxiv.org/abs/2104.07605)<br/>
+📖 [Paper](https://arxiv.org/abs/2104.07605)
 🎥 [Demo](https://vimeo.com/537498802)
+ 
+Authors: [Jesse Vig](https://twitter.com/jesse_vig)<sup>1</sup>, 
+[Wojciech Kryściński](https://twitter.com/iam_wkr)<sup>1</sup>,
+ [Karan Goel](https://twitter.com/krandiash)<sup>2</sup>,
+  [Nazneen Fatema Rajani](https://twitter.com/nazneenrajani)<sup>1</sup><br/>
+  <sup>1</sup> [Salesforce Research](https://einstein.ai/) <sup>2</sup> [Stanford Hazy Research](https://hazyresearch.stanford.edu/)
 
+## Interface
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/robustness-gym/summvis/master/images/main-vis.jpg" width="1000" alt="Figure"/>
-</p>
+The SummVis interface is shown below. The primary components are: **(a)** configuration panel, **(b)** source document (or reference 
+ summary, depending on configuration), **(c)** generated summaries (and/or reference summary, depending on configuration),
+  **(d)** scroll bar with global view of annotations.
+   
+   **Colored underlines** align n-grams between source document and the 
+  selected summary (BART). Novel words in the summary that do not appear in the source document are
+     **bolded**, while novel entities are **bolded in red**. Stopwords are 
+     **grayed out** and are not used in the matching algorithms. **Dotted underlines** indicate tokens
+      that are semantically related to a token in the source document. The user may hover over a token to see the most semantically similar tokens in the source
+        document (see inset image), or click on the token to auto-scroll the source document to the most similar token.
 
+![Image](images/main-vis.jpg) 
+ 
 
 ## Installation
 **IMPORTANT**: Please use `python>=3.8` since some dependencies require that for installation.
