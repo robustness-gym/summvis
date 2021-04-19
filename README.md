@@ -1,26 +1,31 @@
-SummVis is an interactive visualization tool for abstractive summarization models, supporting analysis of models,
-data, and evaluation metrics. Please refer to the following for additional details:
+## About
 
-📖 [Paper](https://arxiv.org/abs/2104.07605)
-🎥 [Demo](https://vimeo.com/537498802)
- 
+SummVis is an interactive visualization tool for abstractive summarization systems, supporting analysis of models,
+data, and evaluation metrics. 
+
 Authors: [Jesse Vig](https://twitter.com/jesse_vig)<sup>1</sup>, 
 [Wojciech Kryściński](https://twitter.com/iam_wkr)<sup>1</sup>,
  [Karan Goel](https://twitter.com/krandiash)<sup>2</sup>,
   [Nazneen Fatema Rajani](https://twitter.com/nazneenrajani)<sup>1</sup><br/>
-  <sup>1</sup> [Salesforce Research](https://einstein.ai/) <sup>2</sup> [Stanford Hazy Research](https://hazyresearch.stanford.edu/)
+  <sup>1</sup>[Salesforce Research](https://einstein.ai/) <sup>2</sup>[Stanford Hazy Research](https://hazyresearch.stanford.edu/)
 
-## Interface
+📖 [Paper](https://arxiv.org/abs/2104.07605)
+🎥 [Demo](https://vimeo.com/537498802)
+
+_Note: SummVis is under active development, so expect continued updates in the coming weeks and months.
+ Feel free to raise issues for questions, suggestions, requests or bug reports._
+
+## Overview
 
 The SummVis interface is shown below. The primary components are: **(a)** configuration panel, **(b)** source document (or reference 
  summary, depending on configuration), **(c)** generated summaries (and/or reference summary, depending on configuration),
   **(d)** scroll bar with global view of annotations.
    
-   **Colored underlines** align n-grams between source document and the 
+   **Solid underlines** align n-grams between source document and the 
   selected summary (BART). Novel words in the summary that do not appear in the source document are
      **bolded**, while novel entities are **bolded in red**. Stopwords are 
      **grayed out** and are not used in the matching algorithms. **Dotted underlines** indicate tokens
-      that are semantically related to a token in the source document. The user may hover over a token to see the most semantically similar tokens in the source
+      that are semantically related to a token in the source document. You may hover over a token to see the most semantically similar tokens in the source
         document (see inset image), or click on the token to auto-scroll the source document to the most similar token.
 
 ![Image](images/main-vis.jpg) 
@@ -34,6 +39,8 @@ cd summvis
 pip install -r requirements.txt
 python -m spacy download en_core_web_sm
 ```
+
+Installation takes around 2 minutes on a Macbook Pro.
 
 ## Quickstart
 Follow the steps below to start using SummVis immediately.
@@ -63,7 +70,7 @@ python preprocessing.py \
 --processed_dataset_path data/try:cnn_dailymail_1000.validation \
 --try_it
 ```
-This will take between 10 seconds and several minutes depending on whether you've previously loaded CNN/DailyMail from 
+This will take between 5 seconds and several minutes depending on whether you've previously loaded CNN/DailyMail from 
 the Datasets library.
 
 ### 3. Run SummVis
