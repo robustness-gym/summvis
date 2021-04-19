@@ -70,7 +70,7 @@ python preprocessing.py \
 --processed_dataset_path data/try:cnn_dailymail_1000.validation \
 --try_it
 ```
-This will take between 5 seconds and several minutes depending on whether you've previously loaded CNN/DailyMail from 
+This will take either a few seconds or a few minutes depending on whether you've previously loaded CNN/DailyMail from 
 the Datasets library.
 
 ### 3. Run SummVis
