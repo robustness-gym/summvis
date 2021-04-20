@@ -99,6 +99,14 @@ curl https://storage.googleapis.com/sfr-summvis-data-research/cnn_dailymail_1000
 unzip preprocessing/cnn_dailymail_1000.validation.anonymized.zip -d preprocessing/
 ``` 
 
+#### Example: Download and unzip XSum
+```shell
+mkdir data
+mkdir preprocessing
+curl https://storage.googleapis.com/sfr-summvis-data-research/xsum_1000.validation.anonymized.zip --output preprocessing/xsum_1000.validation.anonymized.zip
+unzip preprocessing/xsum_1000.validation.anonymized.zip -d preprocessing/
+``` 
+
 ### 2. Deanonymize *n* examples:
 
 Set the `--n_samples` argument and name the `--processed_dataset_path` output file accordingly.
