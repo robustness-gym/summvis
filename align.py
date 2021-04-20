@@ -224,9 +224,7 @@ class NGramAligner():
         if not ngram_spans_1 or not ngram_spans_2:
             return {}
         max_span_end_1 = max(span[1] for span in itertools.chain.from_iterable(ngram_spans_1.values()))
-        max_span_end_2 = max(span[1] for span in itertools.chain.from_iterable(ngram_spans_2.values()))
         token_is_available_1 = [True] * max_span_end_1  #
-        token_is_available_2 = [True] * max_span_end_2
         matched_keys = list(set(ngram_spans_1.keys()) & set(ngram_spans_2.keys()))  # Matched normalized ngrams betwee
         matched_keys.sort(key=len, reverse=True)  # Process n-grams from longest to shortest
 
@@ -235,10 +233,8 @@ class NGramAligner():
             spans_1 = ngram_spans_1[key]
             spans_2 = ngram_spans_2[key]
             available_spans_1 = [span for span in spans_1 if all(token_is_available_1[slice(*span)])]
-            available_spans_2 = [span for span in spans_2 if all(token_is_available_2[slice(*span)])]
             matched_spans_1 = []
-            matched_spans_2 = []
-            if available_spans_1 and available_spans_2:
+            if available_spans_1 and spans_2:
                 # if ngram can be matched to available spans in both sequences
                 for span in available_spans_1:
                     # It's possible that these newly matched spans may be overlapping with one another, so
@@ -247,7 +243,7 @@ class NGramAligner():
                         matched_spans_1.append(span)
                         token_is_available_1[slice(*span)] = [False] * (span[1] - span[0])
             for span1 in matched_spans_1:
-                alignment[span1] = matched_spans_2
+                alignment[span1] = spans_2
 
         return alignment
 
