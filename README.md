@@ -241,6 +241,24 @@ python preprocessing.py \
 --processed_dataset_path data/cnn_dailymail
 ```
 
+## Loading a jsonl file directly
+
+If you'd prefer not to run any of the pipelines above, you can load a jsonl file directly into the tool,
+ following the format in the example file below. Note that it will take longer to load each example into the tool
+ (~5-15 seconds on a Macbook Pro) due to computing the semantic similarity scores in realtime.
+ 
+ This also requires the additional install step:
+```
+python -m spacy download en_core_web_lg
+```
+ 
+Example jsonl file:
+```
+{"document":  "This is the document", "summary:reference": "This is the reference summary", "summary:testmodel1": "This is the summary for testmodel1", "summary:testmodel2": "This is the summary for testmodel2"}
+``` 
+
+Simply place the file (named with .jsonl extension) in the `data` directory and then select it from the `File` dropdown at the top of the interface.
+
 ## Citation
 
 When referencing this repository, please cite [this paper](https://arxiv.org/abs/2104.07605):
