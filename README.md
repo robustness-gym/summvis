@@ -1,4 +1,4 @@
-## About
+
 
 SummVis is an interactive visualization tool for abstractive summarization systems, supporting analysis of models,
 data, and evaluation metrics. 
@@ -14,6 +14,17 @@ Authors: [Jesse Vig](https://twitter.com/jesse_vig)<sup>1</sup>,
 
 _Note: SummVis is under active development, so expect continued updates in the coming weeks and months.
  Feel free to raise issues for questions, suggestions, requests or bug reports._
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Installation](#installation)
+- [Quickstart](#quickstart)
+- [General instructions for running with pre-loaded datasets](#general-instructions-for-running-with-pre-loaded-datasets)
+- [Get your data into SummVis: end-to-end preprocessing](#get-your-data-into-summvis--end-to-end-preprocessing)
+- [Loading a jsonl file directly](#loading-a-jsonl-file-directly)
+- [Citation](#citation)
+- [Acknowledgements](#acknowledgements)
 
 ## Overview
 
