@@ -16,13 +16,12 @@ _Note: SummVis is under active development, so expect continued updates in the c
  Feel free to raise issues for questions, suggestions, requests or bug reports._
 
 ## Table of Contents
-
 - [Overview](#overview)
 - [Installation](#installation)
 - [Quickstart](#quickstart)
 - [General instructions for running with pre-loaded datasets](#general-instructions-for-running-with-pre-loaded-datasets)
-- [Get your data into SummVis: end-to-end preprocessing](#get-your-data-into-summvis--end-to-end-preprocessing)
-- [Loading a jsonl file directly](#loading-a-jsonl-file-directly)
+- [Get your data into SummVis](#get-your-data-into-summvis)
+- [End-to-end pipeline](#end-to-end-pipeline)
 - [Citation](#citation)
 - [Acknowledgements](#acknowledgements)
 
@@ -182,7 +181,57 @@ streamlit run summvis.py -- --path your/path/to/data
 Note that the additional `--` is not a mistake, and is required to pass command-line arguments in streamlit.
 
 
-## Get your data into SummVis: end-to-end preprocessing
+## Get your data into SummVis
+
+The simplest way to use SummVis with your own data is to create a jsonl file of the following format:
+
+```
+{"document":  "This is the first source document", "summary:reference": "This is the reference summary", "summary:testmodel1": "This is the summary for testmodel1", "summary:testmodel2": "This is the summary for testmodel2"}
+{"document":  "This is the second source document", "summary:reference": "This is the reference summary", "summary:testmodel1": "This is the summary for testmodel1", "summary:testmodel2": "This is the summary for testmodel2"}
+```
+
+This also requires the additional install step:
+```
+python -m spacy download en_core_web_lg
+```
+ 
+You have two options to load this jsonl file into the tool:
+
+### Option 1: Load the jsonl file directly
+
+The disadvantage of this approach is that all computations are performed in realtime. This is particularly expensive for 
+semantic similarity, which uses a Transformer model. At a result, each example will be slow to load (~5-15 seconds on a Macbook Pro).
+
+1. Place the jsonl file in the `data` directory. Note that the file must be named with a `.jsonl` extension.
+2. Start SummVis: `streamlit run summvis.py` 
+3. Select your jsonl file from the `File` dropdown at the top of the interface.
+
+### Option 2: Preprocess jsonl file (recommended)
+
+You may run `preprocessing.py` to precompute all data required in the interface and generate a cache file, which can
+be read directly into the tool.  
+
+1. Run preprocessing script to generate cache file
+    ```shell
+    python preprocessing.py \
+    --workflow \
+    --dataset_jsonl path/to/my_dataset.jsonl \
+    --processed_dataset_path path/to/my_cache_file
+    ```
+2. Copy output cache file to the `data` directory
+3. Start SummVis: `streamlit run summvis.py`  
+4. Select your file from the `File` dropdown at the top of the interface.
+
+As an alternative to steps 2-3, you may point SummVis to a folder in which the cache file is stored:
+```shell
+streamlit run summvis.py -- --path <parent_directory_of_cache_file>
+```
+
+Note that the preprocessing script may run for a while (~5-15 seconds for each example on a MacBook Pro for
+ documents of typical length found in CNN/DailyMail or XSum), and will be greatly expedited by running on a GPU.
+  You may wish to first try it with a subset of your data.
+
+## End-to-end pipeline
 You can also perform preprocessing end-to-end to load any summarization dataset or model predictions into SummVis. 
 Instructions for this are provided below. 
 
@@ -211,10 +260,18 @@ python preprocessing.py \
 python preprocessing.py \
 --standardize \
 --dataset_jsonl path/to/my_dataset.jsonl \
---doc_column name_of_document_column \
---reference_column name_of_reference_summary_column \
 --save_jsonl_path preprocessing/my_dataset.jsonl
 ```
+
+Expected format of `my_dataset.jsonl`:
+ ```
+{"document":  "This is the first source document", "summary:reference": "This is the reference summary"}
+{"document":  "This is the second source document", "summary:reference": "This is the reference summary"}
+```
+
+If you wish to use column names other than `document` and `summary:reference`, you may specify custom column names
+using the `doc_column` and `reference_column` command-line arguments.
+
 
 ### 2. Add predictions to the saved dataset.
 Takes a saved dataset that has already been standardized and adds predictions to it 
@@ -260,23 +317,6 @@ python preprocessing.py \
 --processed_dataset_path data/cnn_dailymail
 ```
 
-## Loading a jsonl file directly
-
-If you'd prefer not to run any of the pipelines above, you can load a jsonl file directly into the tool,
- following the format in the example file below. Note that it will take longer to load each example into the tool
- (~5-15 seconds on a Macbook Pro) due to computing the semantic similarity scores in realtime.
- 
- This also requires the additional install step:
-```
-python -m spacy download en_core_web_lg
-```
- 
-Example jsonl file:
-```
-{"document":  "This is the document", "summary:reference": "This is the reference summary", "summary:testmodel1": "This is the summary for testmodel1", "summary:testmodel2": "This is the summary for testmodel2"}
-``` 
-
-Simply place the file (named with .jsonl extension) in the `data` directory and then select it from the `File` dropdown at the top of the interface.
 
 ## Citation
 
