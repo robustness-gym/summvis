@@ -21,7 +21,7 @@ _Note: SummVis is under active development, so expect continued updates in the c
 - [Quickstart](#quickstart)
 - [General instructions for running with pre-loaded datasets](#general-instructions-for-running-with-pre-loaded-datasets)
 - [Get your data into SummVis](#get-your-data-into-summvis)
-- [End-to-end pipeline](#end-to-end-pipeline)
+- [Generating predictions](#generating-predictions)
 - [Citation](#citation)
 - [Acknowledgements](#acknowledgements)
 
@@ -208,8 +208,8 @@ semantic similarity, which uses a Transformer model. At a result, each example w
 
 ### Option 2: Preprocess jsonl file (recommended)
 
-You may run `preprocessing.py` to precompute all data required in the interface and generate a cache file, which can
-be read directly into the tool.  
+You may run `preprocessing.py` to precompute all data required in the interface (running `spaCy`, lexical and semantic
+ aligners) and save a cache file, which can be read directly into the tool.  
 
 1. Run preprocessing script to generate cache file
     ```shell
@@ -231,9 +231,12 @@ Note that the preprocessing script may run for a while (~5-15 seconds for each e
  documents of typical length found in CNN/DailyMail or XSum), and will be greatly expedited by running on a GPU.
   You may wish to first try it with a subset of your data.
 
-## End-to-end pipeline
-You can also perform preprocessing end-to-end to load any summarization dataset or model predictions into SummVis. 
-Instructions for this are provided below. 
+## Generating predictions
+The instructions in the previous section assume access to model predictions. We also provide tools to load predictions,
+ either by downloading datasets with precomputed predictions or running
+a script to generate predictions for HuggingFace-compatible models. In this section we describe an end-to-end pipeline 
+for using these tools. 
+
 
 Prior to running the following, an additional install step is required:
 
@@ -278,7 +281,7 @@ Takes a saved dataset that has already been standardized and adds predictions to
 from prediction jsonl files. Cached predictions for several models available here:
  https://storage.googleapis.com/sfr-summvis-data-research/predictions.zip
  
-You may also generate your own predictions using this [this script](generation.py).
+You may also generate your own predictions using this [this script](generation.py). 
 
 #### Example: Add 6 prediction files for PEGASUS and BART to the dataset.
 ```shell
