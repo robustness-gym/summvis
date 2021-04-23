@@ -168,7 +168,7 @@ body {
     opacity: 0.5 !important;
 }
 
-.stopword {
+.stopword.grayed-out {
     opacity: 50%
 }
 

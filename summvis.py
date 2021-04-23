@@ -243,7 +243,7 @@ def show_main(example):
     #     scroll = st.sidebar.checkbox(label="Scroll sections", value=True)
     # else:
     scroll = True
-    grey_stopwords = st.sidebar.checkbox(label="Grey out stopwords", value=True)
+    gray_stopwords = st.sidebar.checkbox(label="Gray out stopwords", value=True)
 
     # Gather data
     try:
@@ -329,7 +329,7 @@ def show_main(example):
             lexical_alignments,
             layout,
             scroll,
-            grey_stopwords
+            gray_stopwords
         ),
         height=850
     )

@@ -87,7 +87,7 @@ def main_view(
     lexical_alignments: Optional[List[Dict]],
     layout: str,
     scroll: bool,
-    grey_out_stopwords: bool
+    gray_out_stopwords: bool
 ):
     # Add document elements
 
@@ -126,16 +126,15 @@ def main_view(
         token_elements = []
         for doc_token_idx, doc_token in enumerate(document):
             if doc_token.is_stop or doc_token.is_punct:
-                if grey_out_stopwords:
-                    el = span(
-                        _class="stopword"
-                    )(
-                        doc_token.text
-                    )
-                else:
-                    el = span()(
-                        doc_token.text
-                    )
+                classes = ["stopword"]
+                if gray_out_stopwords:
+                    classes.append("grayed-out")
+                el = span(
+                    _class=" ".join(classes)
+                )(
+                    doc_token.text
+                )
+
             else:
                 matches = doc_token_idx_to_matches.get(doc_token_idx)
                 if matches:
@@ -249,16 +248,14 @@ def main_view(
         token_elements = []
         for token_idx, token in enumerate(summary):
             if token.is_stop or token.is_punct:
-                if grey_out_stopwords:
-                    el = span(
-                        _class="stopword"
-                    )(
-                        token.text
-                    )
-                else:
-                    el = span()(
-                        token.text
-                    )
+                classes = ["stopword"]
+                if gray_out_stopwords:
+                    classes.append("grayed-out")
+                el = span(
+                    _class=" ".join(classes)
+                )(
+                    token.text
+                )
             else:
                 classes = []
                 if token.ent_iob_ in ('I', 'B'):
