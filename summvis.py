@@ -14,7 +14,7 @@ from robustnessgym import Spacy
 from spacy.tokens import Doc
 
 from align import NGramAligner, BertscoreAligner, StaticEmbeddingAligner
-from components import main_view
+from components import MainView
 from preprocessing import NGramAlignerCap, StaticEmbeddingAlignerCap, \
     BertscoreAlignerCap
 from preprocessing import _spacy_decode, _spacy_encode
@@ -207,14 +207,6 @@ def select_comparison(example):
     return selected_document, selected_summaries
 
 
-def show_html(*elements, width=None, height=None, **kwargs):
-    out = div(style=styles(
-        **kwargs
-    ))(elements)
-    html = str(out)
-    st.components.v1.html(html, width=width, height=height, scrolling=True)
-
-
 def show_main(example):
     # Get user input
 
@@ -243,7 +235,7 @@ def show_main(example):
     #     scroll = st.sidebar.checkbox(label="Scroll sections", value=True)
     # else:
     scroll = True
-    gray_stopwords = st.sidebar.checkbox(label="Gray out stopwords", value=True)
+    gray_out_stopwords = st.sidebar.checkbox(label="Gray out stopwords", value=True)
 
     # Gather data
     try:
@@ -320,19 +312,16 @@ def show_main(example):
                 filter_alignment(alignment, semantic_sim_threshold, semantic_sim_top_k)
                 for alignment in semantic_alignments
             ]
-
-    show_html(
-        *main_view(
-            document,
-            summaries,
-            semantic_alignments,
-            lexical_alignments,
-            layout,
-            scroll,
-            gray_stopwords
-        ),
-        height=850
-    )
+    
+    MainView(
+        document,
+        summaries,
+        semantic_alignments,
+        lexical_alignments,
+        layout,
+        scroll,
+        gray_out_stopwords,
+    ).show(height=850)
 
 
 if __name__ == "__main__":
