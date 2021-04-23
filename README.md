@@ -1,6 +1,6 @@
 
 
-SummVis is an interactive visualization tool for abstractive summarization systems, supporting analysis of models,
+SummVis is an interactive visualization tool for text summarization systems, supporting analysis of models,
 data, and evaluation metrics. 
 
 Authors: [Jesse Vig](https://twitter.com/jesse_vig)<sup>1</sup>, 
@@ -16,7 +16,7 @@ _Note: SummVis is under active development, so expect continued updates in the c
  Feel free to raise issues for questions, suggestions, requests or bug reports._
 
 ## Table of Contents
-- [Overview](#overview)
+- [User guide](#user-guide)
 - [Installation](#installation)
 - [Quickstart](#quickstart)
 - [General instructions for running with pre-loaded datasets](#general-instructions-for-running-with-pre-loaded-datasets)
@@ -25,7 +25,16 @@ _Note: SummVis is under active development, so expect continued updates in the c
 - [Citation](#citation)
 - [Acknowledgements](#acknowledgements)
 
-## Overview
+## User guide
+
+### Overview
+SummVis is a tool for analyzing abstractive summarization systems. It provides fine-grained insights on summarization
+models, data, and evaluation metrics by visualizing the relationships between source documents, reference summaries,
+and generated summaries, as illustrated in the figure below.<br/>
+
+![Image](images/triangle.png) 
+
+### Interface
 
 The SummVis interface is shown below. The primary components are: **(a)** configuration panel, **(b)** source document (or reference 
  summary, depending on configuration), **(c)** generated summaries (and/or reference summary, depending on configuration),
