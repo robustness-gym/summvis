@@ -10,7 +10,7 @@ Authors: [Jesse Vig](https://twitter.com/jesse_vig)<sup>1</sup>,
   <sup>1</sup>[Salesforce Research](https://einstein.ai/) <sup>2</sup>[Stanford Hazy Research](https://hazyresearch.stanford.edu/)
 
 📖 [Paper](https://arxiv.org/abs/2104.07605)
-🎥 [Demo](https://vimeo.com/537498802)
+🎥 [Demo](https://vimeo.com/540418847)
 
 _Note: SummVis is under active development, so expect continued updates in the coming weeks and months.
  Feel free to raise issues for questions, suggestions, requests or bug reports._
