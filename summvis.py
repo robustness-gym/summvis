@@ -321,7 +321,7 @@ def show_main(example):
         layout,
         scroll,
         gray_out_stopwords,
-    ).show(height=850)
+    ).show(height=720)
 
 
 if __name__ == "__main__":
