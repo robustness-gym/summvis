@@ -296,9 +296,33 @@ $(document).ready(
                 if (topHighlight.data("tooltip-timestamp") == tooltipTimestamp) {
                     topHighlight.tooltip("dispose");
                 }
-            }, 15000);
+            }, 8000);
         }
 
+        function highlightUnderlines() {
+            const spanId = getSpanId($(this));
+            const color = $(this).css("border-bottom-color");
+            // TODO Consolidate into single statement
+            $(`.summary-item.selected .underline.${spanId}`).removeClass("annotation-inactive");
+            $(`.doc .underline.${spanId}`)
+                .removeClass("annotation-inactive")
+                .each(function () {
+                    $(this).css("border-bottom-color", color);
+                })
+                .addClass("temp-underline-color");
+            $(`.proxy-underline.${spanId}`)
+                .removeClass("annotation-inactive")
+                .each(function () {
+                    $(this).css("background-color", color);
+                })
+                .addClass("temp-proxy-underline-color");
+
+            $(`.summary-item.selected .underline:not(.${spanId})`).addClass("annotation-inactive");
+            $(`.doc .underline:not(.${spanId})`).addClass("annotation-inactive");
+            $(`.proxy-underline:not(.${spanId})`).addClass("annotation-inactive");
+
+            $(".summary-item.selected .highlight:not(.annotation-hidden)").addClass("annotation-inactive");
+        }
 
         function resetHighlights() {
             $('.summary-item.selected .annotation-inactive').removeClass("annotation-inactive");
@@ -405,31 +429,10 @@ $(document).ready(
             "mouseenter",
             activeUnderlines,
             function () {
-                const spanId = getSpanId($(this));
-                const color = $(this).css("border-bottom-color");
-                // TODO Consolidate into single statement
-                $(`.summary-item.selected .underline.${spanId}`).removeClass("annotation-inactive");
-                $(`.doc .underline.${spanId}`)
-                    .removeClass("annotation-inactive")
-                    .each(function () {
-                        $(this).css("border-bottom-color", color);
-                    })
-                    .addClass("temp-underline-color");
-                $(`.proxy-underline.${spanId}`)
-                    .removeClass("annotation-inactive")
-                    .each(function () {
-                        $(this).css("background-color", color);
-                    })
-                    .addClass("temp-proxy-underline-color");
-
-                $(`.summary-item.selected .underline:not(.${spanId})`).addClass("annotation-inactive");
-                $(`.doc .underline:not(.${spanId})`).addClass("annotation-inactive");
-                $(`.proxy-underline:not(.${spanId})`).addClass("annotation-inactive");
-
-                $(".summary-item.selected .highlight:not(.annotation-hidden)").addClass("annotation-inactive");
-
+                highlightUnderlines.call(this);
             }
         );
+
         $(".summary-list").on(
             "mouseleave",
             activeUnderlines,
@@ -440,6 +443,7 @@ $(document).ready(
             activeUnderlines,
             function () {
                 // Find aligned underline in doc  and scroll doc to that position
+                highlightUnderlines.call(this);
                 const mainDoc = $(".display .main-doc");
                 const spanId = getSpanId($(this));
                 const matchedUnderline = $(`.doc .underline.${spanId}`);
@@ -473,6 +477,7 @@ $(document).ready(
             "click",
             activeHighlights,
             function () {
+                highlightToken.call(this);
                 // Find corresponding highlight in doc representing max similarity and scroll doc to that position
                 const topDocHighlightId = $(this).data("top-doc-highlight-id");
                 removeDocTooltips(topDocHighlightId);
