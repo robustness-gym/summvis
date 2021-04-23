@@ -257,13 +257,8 @@ $(document).ready(
             }
         }
 
-        function removeDocTooltips(excludeHighlightId) {
-            let excludeSelector = "";
-            if (excludeHighlightId != null) {
-                excludeSelector = `[data-highlight-id!=${excludeHighlightId}])`
-            } else {
-                $(`.display .main-doc .highlight${excludeSelector}`).tooltip("dispose").removeData("tooltip-timestamp");
-            }
+        function removeDocTooltips() {
+            $("[data-tooltip-timestamp]").tooltip("dispose").removeAttr("data-tooltip-timestamp");
         }
 
         function resetUnderlines() {
@@ -291,10 +286,11 @@ $(document).ready(
             topHighlight.tooltip({title: `Most similar (${topDocSim})`, trigger: "manual"});
             topHighlight.tooltip("show");
             const tooltipTimestamp = Date.now();
-            topHighlight.data("tooltip-timestamp", tooltipTimestamp);
+            // Do not use .data() method to set data attributes as they are not searchable
+            topHighlight.attr("data-tooltip-timestamp", tooltipTimestamp);
             setTimeout(function () {
                 if (topHighlight.data("tooltip-timestamp") == tooltipTimestamp) {
-                    topHighlight.tooltip("dispose");
+                    topHighlight.tooltip("dispose").removeAttr("data-tooltip-timestamp");
                 }
             }, 8000);
         }
@@ -325,15 +321,16 @@ $(document).ready(
         }
 
         function resetHighlights() {
+            removeDocTooltips();
             $('.summary-item.selected .annotation-inactive').removeClass("annotation-inactive");
             $('.summary-item.selected .annotation-invisible').removeClass("annotation-invisible");
             $('.temp-highlight-color')
                 .each(function () {
                     $(this).css("background-color", $(this).data("primary-color"));
                 })
-                .removeClass("temp-highlight-color")
-            $('.highlight.selected').removeClass("selected")
-            $('.proxy-highlight.selected').removeClass("selected")
+                .removeClass("temp-highlight-color");
+            $('.highlight.selected').removeClass("selected");
+            $('.proxy-highlight.selected').removeClass("selected");
             $('.summary-item [title]').removeAttr("title");
         }
 
@@ -468,7 +465,6 @@ $(document).ready(
             "mouseleave",
             activeHighlights,
             function () {
-                removeDocTooltips();
                 resetHighlights();
                 resetUnderlines();
             }
@@ -492,9 +488,14 @@ $(document).ready(
                     function () {
                         setTimeout(
                             function () {
-                                showDocTooltip(el);
+                                // If no other tooltips have since been displayed
+                                if ($("[data-tooltip-timestamp]").length == 0) {
+                                    showDocTooltip(el);
+                                } else {
+                                    console.log("Not showing tooltip because one already exists")
+                                }
                             },
-                            300
+                            100
                         )
                     }
                 )
