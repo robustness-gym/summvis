@@ -134,16 +134,23 @@ def _run_aligners(
     if not summary_columns:
         summary_columns = []
 
+    to_columns = []
+    if reference_column is not None:
+        to_columns.append(reference_column)
+    to_columns.extend(summary_columns)
+
     for aligner in aligners:
+
         # Run the aligner on (document, summary) pairs
+
         dataset = aligner(
             dataset,
-            [doc_column, reference_column] + summary_columns,
+            [doc_column] + to_columns,
             # Must use `batch_size = 1`
             batch_size=1,
         )
 
-        if len(summary_columns):
+        if reference_column is not None and len(summary_columns):
             # Run the aligner on (reference, summary) pairs
             dataset = aligner(
                 dataset,
@@ -152,17 +159,17 @@ def _run_aligners(
                 batch_size=1,
             )
 
-        if len(summary_columns):
+        if len(to_columns) > 1:
             # Instead of having one column for (document, summary) comparisons, split
             # off into (1 + |summary_columns|) total columns, one for each comparison
 
             # Retrieve the (document, summary) column
             doc_summary_column = aligner.retrieve(
                 dataset[:],
-                [doc_column, reference_column] + summary_columns,
-            )[tuple([doc_column, reference_column] + summary_columns)]
+                [doc_column] + to_columns,
+            )[tuple([doc_column] + to_columns)]
 
-            for i, col in enumerate([reference_column] + summary_columns):
+            for i, col in enumerate(to_columns):
                 # Add as a new column after encoding with the aligner's `encode` method
                 dataset.add_column(
                     column=str(aligner.identifier(columns=[doc_column, col])),
@@ -173,7 +180,7 @@ def _run_aligners(
             dataset.remove_column(
                 str(
                     aligner.identifier(
-                        columns=[doc_column, reference_column] + summary_columns
+                        columns=[doc_column] + to_columns
                     )
                 )
             )
@@ -181,12 +188,12 @@ def _run_aligners(
                 (
                     aligner.identifier,
                     strings_as_json(
-                        strings=[doc_column, reference_column] + summary_columns
+                        strings=[doc_column] + to_columns
                     )
                 )
             ]
 
-        if len(summary_columns) > 1:
+        if reference_column is not None and len(summary_columns) > 1:
             # Instead of having one column for (reference, summary) comparisons, split
             # off into (|summary_columns|) total columns, one for each comparison
 
@@ -243,12 +250,15 @@ def deanonymize_dataset(
         dataset.set_visible_rows(list(range(n_samples)))
         standardized_dataset.set_visible_rows(list(range(n_samples)))
 
+    text_columns = []
+
     # Add columns from the standardized dataset
     dataset.add_column('document', standardized_dataset['document'])
-    dataset.add_column('summary:reference', standardized_dataset['summary:reference'])
+    text_columns.append('document')
 
-    # Combine the text columns into one list
-    text_columns = ['document', 'summary:reference']
+    if 'summary:reference' in standardized_dataset.column_names:
+        dataset.add_column('summary:reference', standardized_dataset['summary:reference'])
+        text_columns.append('summary:reference')
 
     # Preprocessing all the text columns
     dataset = dataset.update(
@@ -308,9 +318,10 @@ def run_workflow(
     if reference_column is None:
         # Assume `reference_column` is called "summary:reference"
         reference_column = 'summary:reference'
-        assert reference_column in dataset.column_names, \
-            f"`reference_column={reference_column}` is not a column in dataset."
         print("Assuming `reference_column` is called 'summary:reference'.")
+        if reference_column not in dataset.column_names:
+            print("No reference summary loaded")
+            reference_column = None
 
     if summary_columns is None or len(summary_columns) == 0:
         # Assume `summary_columns` are prefixed by "summary:"
@@ -320,12 +331,15 @@ def run_workflow(
                 summary_columns.append(col)
         print(f"Reading summary columns from dataset. Found {summary_columns}.")
 
+    if len(summary_columns) == 0 and reference_column is None:
+        raise ValueError("At least one summary is required")
+
     # Set visible rows to restrict to the first `n_samples`
     if n_samples:
         dataset.set_visible_rows(list(range(n_samples)))
 
     # Combine the text columns into one list
-    text_columns = [doc_column, reference_column] + summary_columns
+    text_columns = [doc_column] + ([reference_column] if reference_column else []) + summary_columns
 
     # Preprocessing all the text columns
     dataset = dataset.update(
@@ -363,7 +377,7 @@ def run_workflow(
         dataset=dataset,
         aligners=[bert_aligner, embedding_aligner, ngram_aligner],
         doc_column=f'preprocessed_{doc_column}',
-        reference_column=f'preprocessed_{reference_column}',
+        reference_column=f'preprocessed_{reference_column}' if reference_column else None,
         summary_columns=[f'preprocessed_{col}' for col in summary_columns],
     )
 
@@ -371,15 +385,15 @@ def run_workflow(
     if anonymize:
         # Remove certain columns to anonymize and save to disk
         for col in [doc_column, reference_column]:
-            dataset.remove_column(col)
-            dataset.remove_column(f'preprocessed_{col}')
-            dataset.remove_column(
-                str(spacy.identifier(columns=[f'preprocessed_{col}']))
-            )
-            del dataset.interactions[CACHEDOPS].history[
-                (spacy.identifier, f'preprocessed_{col}')
-            ]
-
+            if col is not None:
+                dataset.remove_column(col)
+                dataset.remove_column(f'preprocessed_{col}')
+                dataset.remove_column(
+                    str(spacy.identifier(columns=[f'preprocessed_{col}']))
+                )
+                del dataset.interactions[CACHEDOPS].history[
+                    (spacy.identifier, f'preprocessed_{col}')
+                ]
         dataset.save_to_disk(f'{processed_dataset_path}.anonymized')
     else:
         # Directly save to disk
@@ -492,7 +506,9 @@ def standardize_dataset(
         dataset_jsonl=dataset_jsonl,
     )
 
-    if (doc_column is None) or (reference_column is None):
+    if doc_column is None:
+        if not reference_column:
+            raise ValueError("You must specify `doc_column` if you specify `reference_column`")
         try:
             doc_column, reference_column = {
                 'cnn_dailymail': ('article', 'highlights'),
@@ -500,7 +516,7 @@ def standardize_dataset(
             }[dataset_name]
         except:
             raise NotImplementedError(
-                "Please specify `doc_column` and `reference_column`."
+                "Please specify `doc_column`."
             )
 
     # Rename the columns

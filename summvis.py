@@ -7,8 +7,6 @@ from pathlib import Path
 
 import spacy
 import streamlit as st
-import streamlit.components.v1 as components
-from htbuilder import styles, div
 from robustnessgym import Dataset, Identifier
 from robustnessgym import Spacy
 from spacy.tokens import Doc
@@ -28,12 +26,11 @@ Doc.set_extension("column", default=None, force=True)
 
 
 class Instance():
-    def __init__(self, id_, document, reference, preds, index=None, data=None):
+    def __init__(self, id_, document, reference, preds, data=None):
         self.id = id_
         self.document = document
         self.reference = reference
         self.preds = preds
-        self.index = index
         self.data = data
 
 
@@ -113,10 +110,14 @@ def retrieve(dataset, index, filename=None):
         try:
             text = data['summary'] if 'summary' in data else data['summary:reference']
         except KeyError:
-            text = data['highlights']
-        reference = nlp(preprocess_text(text))
-    reference._.name = "Reference"
-    reference._.column = "summary:reference"
+            text = data.get('highlights')
+        if text:
+            reference = nlp(preprocess_text(text))
+        else:
+            reference = None
+    if reference is not None:
+        reference._.name = "Reference"
+        reference._.column = "summary:reference"
 
     model_names = set()
     for k in data:
@@ -165,7 +166,6 @@ def retrieve(dataset, index, filename=None):
         document=document,
         reference=reference,
         preds=preds,
-        index=data['index'] if 'index' in data else None,
         data=data,
     )
 
@@ -180,9 +180,16 @@ def filter_alignment(alignment, threshold, top_k):
 
 
 def select_comparison(example):
-    all_summaries = [example.reference] + example.preds
+    all_summaries = []
 
-    from_documents = [example.document, example.reference]
+    if example.reference:
+        all_summaries.append(example.reference)
+    if example.preds:
+        all_summaries.extend(example.preds)
+
+    from_documents = [example.document]
+    if example.reference:
+        from_documents.append(example.reference)
     document_names = [document._.name for document in from_documents]
     select_document_name = sidebar_placeholder_from.selectbox(
         label="Comparison FROM:",

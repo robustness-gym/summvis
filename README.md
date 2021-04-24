@@ -214,7 +214,10 @@ The simplest way to use SummVis with your own data is to create a jsonl file of 
 {"document":  "This is the second source document", "summary:reference": "This is the reference summary", "summary:testmodel1": "This is the summary for testmodel1", "summary:testmodel2": "This is the summary for testmodel2"}
 ```
 
-This also requires the additional install step:
+The key for the reference summary must equal `summary:reference` and the key for any other summary must be of the form
+`summary:<summary_name>`, e.g. `summary:BART`. The document is required, as is at least one summary (reference, other, or both).
+
+The following additional install step is required.:
 ```
 python -m spacy download en_core_web_lg
 ```
@@ -251,7 +254,7 @@ As an alternative to steps 2-3, you may point SummVis to a folder in which the c
 streamlit run summvis.py -- --path <parent_directory_of_cache_file>
 ```
 
-Note that the preprocessing script may run for a while (~5-15 seconds for each example on a MacBook Pro for
+Note that the preprocessing script may run for a while (~5-15 seconds per example on a MacBook Pro for
  documents of typical length found in CNN/DailyMail or XSum), and will be greatly expedited by running on a GPU.
   You may wish to first try it with a subset of your data.
 
