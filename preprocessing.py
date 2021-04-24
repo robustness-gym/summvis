@@ -507,7 +507,7 @@ def standardize_dataset(
     )
 
     if doc_column is None:
-        if not reference_column:
+        if reference_column is not None:
             raise ValueError("You must specify `doc_column` if you specify `reference_column`")
         try:
             doc_column, reference_column = {
