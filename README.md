@@ -32,23 +32,34 @@ SummVis is a tool for analyzing abstractive summarization systems. It provides f
 models, data, and evaluation metrics by visualizing the relationships between source documents, reference summaries,
 and generated summaries, as illustrated in the figure below.<br/>
 
-![Image](images/triangle.png) 
+![Relations between source, reference, and generated summaries](images/triangle.png) 
 
 ### Interface
 
-The SummVis interface is shown below. The primary components are: **(a)** configuration panel, **(b)** source document (or reference 
- summary, depending on configuration), **(c)** generated summaries (and/or reference summary, depending on configuration),
-  **(d)** scroll bar with global view of annotations.
-   
-   **Solid underlines** align n-grams between source document and the 
-  selected summary (BART). Novel words in the summary that do not appear in the source document are
-     **bolded**, while novel entities are **bolded in red**. Stopwords are 
-     **grayed out** and are not used in the matching algorithms. **Dotted underlines** indicate tokens
-      that are semantically related to a token in the source document. You may hover over a token to see the most semantically similar tokens in the source
-        document (see inset image), or click on the token to auto-scroll the source document to the most similar token.
+The SummVis interface is shown below. The example displayed is the first record from the
+ [CNN / Daily Mail](https://huggingface.co/datasets/cnn_dailymail) validation set. 
 
-![Image](images/main-vis.jpg) 
- 
+![Main interface](images/main-vis.jpg) 
+
+
+#### Components
+
+**(a)** Configuration panel<br/>
+**(b)** Source document (or reference summary, depending on configuration)<br/>
+**(c)** Generated summaries (and/or reference summary, depending on configuration)<br/>
+**(d)** Scroll bar with global view of annotations<br/>
+
+#### Annotations   
+<img src="images/annotations.png" width="397" height="43" alt="Annotations"/>
+
+**N-gram overlap:** Word sequences that overlap between the document on the left and
+ the selected summary on the right. Underlines are color-coded by index of summary sentence. <br/>
+**Semantic overlap**: Words in the summary that are semantically close to one or more words in document on the left.<br/>
+**Novel words**: Words in the summary that do not appear in the document on the left.<br/>
+**Novel entities**: Entity words in the summary that do not appear in the document on the left.<br/>
+
+### Limitations   
+Currently only English text is supported.
 
 ## Installation
 **IMPORTANT**: Please use `python>=3.8` since some dependencies require that for installation.
