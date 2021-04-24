@@ -50,7 +50,7 @@ The SummVis interface is shown below. The example displayed is the first record 
 **(d)** Scroll bar with global view of annotations<br/>
 
 #### Annotations   
-<img src="images/annotations.png" width="595" height="64" alt="Annotations"/>
+<img src="images/annotations.png" width="548" height="39" alt="Annotations"/>
 
 **N-gram overlap:** Word sequences that overlap between the document on the left and
  the selected summary on the right. Underlines are color-coded by index of summary sentence. <br/>
