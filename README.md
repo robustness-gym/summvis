@@ -67,7 +67,8 @@ Currently only English text is supported.
 
 ## Installation
 **IMPORTANT**: Please use `python>=3.8` since some dependencies require that for installation.
-```zsh
+```shell
+# Requires python>=3.8
 git clone https://github.com/robustness-gym/summvis.git
 cd summvis
 pip install -r requirements.txt
