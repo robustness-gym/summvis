@@ -12,10 +12,9 @@ Authors: [Jesse Vig](https://twitter.com/jesse_vig)<sup>1</sup>,
 📖 [Paper](https://arxiv.org/abs/2104.07605)
 🎥 [Demo](https://vimeo.com/540429745)
 
-<p align="center">
-    <img src="images/demo.gif" width="700" alt="Demo gif"/>
+<p>
+    <img src="images/demo.gif" alt="Demo gif"/>
 </p>
-
 _Note: SummVis is under active development, so expect continued updates in the coming weeks and months.
  Feel free to raise issues for questions, suggestions, requests or bug reports._
 
