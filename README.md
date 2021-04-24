@@ -15,6 +15,7 @@ Authors: [Jesse Vig](https://twitter.com/jesse_vig)<sup>1</sup>,
 <p>
     <img src="images/demo.gif" alt="Demo gif"/>
 </p>
+
 _Note: SummVis is under active development, so expect continued updates in the coming weeks and months.
  Feel free to raise issues for questions, suggestions, requests or bug reports._
 
