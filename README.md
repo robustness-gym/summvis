@@ -13,7 +13,7 @@ Authors: [Jesse Vig](https://twitter.com/jesse_vig)<sup>1</sup>,
 🎥 [Demo](https://vimeo.com/540429745)
 
 <p>
-    <img src="images/demo.gif" alt="Demo gif"/>
+    <img src="website/demo.gif" alt="Demo gif"/>
 </p>
 
 _Note: SummVis is under active development, so expect continued updates in the coming weeks and months.
@@ -36,14 +36,14 @@ SummVis is a tool for analyzing abstractive summarization systems. It provides f
 models, data, and evaluation metrics by visualizing the relationships between source documents, reference summaries,
 and generated summaries, as illustrated in the figure below.<br/>
 
-![Relations between source, reference, and generated summaries](images/triangle.png) 
+![Relations between source, reference, and generated summaries](website/triangle.png) 
 
 ### Interface
 
 The SummVis interface is shown below. The example displayed is the first record from the
  [CNN / Daily Mail](https://huggingface.co/datasets/cnn_dailymail) validation set. 
 
-![Main interface](images/main-vis.jpg) 
+![Main interface](website/main-vis.jpg) 
 
 
 #### Components
@@ -54,7 +54,7 @@ The SummVis interface is shown below. The example displayed is the first record 
 **(d)** Scroll bar with global view of annotations<br/>
 
 #### Annotations   
-<img src="images/annotations.png" width="548" height="39" alt="Annotations"/>
+<img src="website/annotations.png" width="548" height="39" alt="Annotations"/>
 
 **N-gram overlap:** Word sequences that overlap between the document on the left and
  the selected summary on the right. Underlines are color-coded by index of summary sentence. <br/>
