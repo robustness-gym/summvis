@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="website/title.png" width="400" alt="SummVis"/>
+    <img src="website/title.png" width="200" alt="SummVis"/>
 </p>
 <h3 align="center">Interactive Visual Analysis of Models, Data, and Evaluation for Text Summarization</h3>
 
