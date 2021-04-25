@@ -1,6 +1,10 @@
 # SummVis
 
 #### SummVis: Interactive Visual Analysis of Models, Data, and Evaluation for Text Summarization
+
+SummVis is an open-source visualization tool that supports fine-grained analysis of the models, data, and evaluation 
+metrics associated with text summarization. Through its lexical and semantic visualizations, the tools offers an easy 
+entry point for in-depth model prediction exploration across important dimensions such as factual consistency or abstractiveness.
  
 Authors: [Jesse Vig](https://twitter.com/jesse_vig)<sup>1</sup>, 
 [Wojciech Kryściński](https://twitter.com/iam_wkr)<sup>1</sup>,
