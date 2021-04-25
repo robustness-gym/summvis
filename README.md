@@ -4,8 +4,7 @@
 <h3 align="center">Interactive Visual Analysis of Models, Data, and Evaluation for Text Summarization</h3>
 
 SummVis is an open-source visualization tool that supports fine-grained analysis of summarization models, data, and evaluation 
-metrics. Through its lexical and semantic visualizations, the tools offers an easy 
-entry point for in-depth model prediction exploration across important dimensions such as factual consistency or abstractiveness.
+metrics. Through its lexical and semantic visualizations, the tools enables in-depth exploration across important dimensions such as factual consistency or abstractiveness.
  
 Authors: [Jesse Vig](https://twitter.com/jesse_vig)<sup>1</sup>, 
 [Wojciech Kryściński](https://twitter.com/iam_wkr)<sup>1</sup>,
@@ -241,7 +240,9 @@ semantic similarity, which uses a Transformer model. At a result, each example w
 #### Option 2: Preprocess jsonl file (recommended)
 
 You may run `preprocessing.py` to precompute all data required in the interface (running `spaCy`, lexical and semantic
- aligners) and save a cache file, which can be read directly into the tool.  
+ aligners) and save a cache file, which can be read directly into the tool. Note that this script may run for a while
+  (~5-15 seconds per example on a MacBook Pro for
+ documents of typical length found in CNN/DailyMail or XSum), and will be greatly expedited by running on a GPU.
 
 1. Run preprocessing script to generate cache file
     ```shell
@@ -250,6 +251,8 @@ You may run `preprocessing.py` to precompute all data required in the interface 
     --dataset_jsonl path/to/my_dataset.jsonl \
     --processed_dataset_path path/to/my_cache_file
     ```
+     You may wish to first try it with a subset of your data by adding the following argument: `--n_samples <number_of_samples>`.
+
 2. Copy output cache file to the `data` directory
 3. Start SummVis: `streamlit run summvis.py`  
 4. Select your file from the `File` dropdown at the top of the interface.
@@ -258,11 +261,6 @@ As an alternative to steps 2-3, you may point SummVis to a folder in which the c
 ```shell
 streamlit run summvis.py -- --path <parent_directory_of_cache_file>
 ```
-
-Note that the preprocessing script may run for a while (~5-15 seconds per example on a MacBook Pro for
- documents of typical length found in CNN/DailyMail or XSum), and will be greatly expedited by running on a GPU.
-  You may wish to first try it with a subset of your data.
-
 ### Generating predictions
 The instructions in the previous section assume access to model predictions. We also provide tools to load predictions,
  either by downloading datasets with precomputed predictions or running
