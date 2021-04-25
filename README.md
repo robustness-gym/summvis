@@ -1,8 +1,7 @@
+# SummVis
 
-
-SummVis is an interactive visualization tool for text summarization systems, supporting analysis of models,
-data, and evaluation metrics. 
-
+### SummVis: Interactive Visual Analysis of Models, Data, and Evaluation for Text Summarization
+ 
 Authors: [Jesse Vig](https://twitter.com/jesse_vig)<sup>1</sup>, 
 [Wojciech Kryściński](https://twitter.com/iam_wkr)<sup>1</sup>,
  [Karan Goel](https://twitter.com/krandiash)<sup>2</sup>,
@@ -11,6 +10,7 @@ Authors: [Jesse Vig](https://twitter.com/jesse_vig)<sup>1</sup>,
 
 📖 [Paper](https://arxiv.org/abs/2104.07605)
 🎥 [Demo](https://vimeo.com/540429745)
+
 
 <p>
     <img src="website/demo.gif" alt="Demo gif"/>
@@ -23,9 +23,8 @@ _Note: SummVis is under active development, so expect continued updates in the c
 - [User guide](#user-guide)
 - [Installation](#installation)
 - [Quickstart](#quickstart)
-- [General instructions for running with pre-loaded datasets](#general-instructions-for-running-with-pre-loaded-datasets)
+- [Running with pre-loaded datasets](#running-with-pre-loaded-datasets)
 - [Get your data into SummVis](#get-your-data-into-summvis)
-- [Generating predictions](#generating-predictions)
 - [Citation](#citation)
 - [Acknowledgements](#acknowledgements)
 
@@ -115,7 +114,7 @@ of the interface.
 streamlit run summvis.py
 ```
 
-## General instructions for running with pre-loaded datasets
+## Running with pre-loaded datasets
 
 ### 1. Download one of the pre-loaded datasets:
 
@@ -225,7 +224,7 @@ python -m spacy download en_core_web_lg
  
 You have two options to load this jsonl file into the tool:
 
-### Option 1: Load the jsonl file directly
+#### Option 1: Load the jsonl file directly
 
 The disadvantage of this approach is that all computations are performed in realtime. This is particularly expensive for 
 semantic similarity, which uses a Transformer model. At a result, each example will be slow to load (~5-15 seconds on a Macbook Pro).
@@ -234,7 +233,7 @@ semantic similarity, which uses a Transformer model. At a result, each example w
 2. Start SummVis: `streamlit run summvis.py` 
 3. Select your jsonl file from the `File` dropdown at the top of the interface.
 
-### Option 2: Preprocess jsonl file (recommended)
+#### Option 2: Preprocess jsonl file (recommended)
 
 You may run `preprocessing.py` to precompute all data required in the interface (running `spaCy`, lexical and semantic
  aligners) and save a cache file, which can be read directly into the tool.  
@@ -259,7 +258,7 @@ Note that the preprocessing script may run for a while (~5-15 seconds per exampl
  documents of typical length found in CNN/DailyMail or XSum), and will be greatly expedited by running on a GPU.
   You may wish to first try it with a subset of your data.
 
-## Generating predictions
+### Generating predictions
 The instructions in the previous section assume access to model predictions. We also provide tools to load predictions,
  either by downloading datasets with precomputed predictions or running
 a script to generate predictions for HuggingFace-compatible models. In this section we describe an end-to-end pipeline 
@@ -272,11 +271,11 @@ Prior to running the following, an additional install step is required:
 python -m spacy download en_core_web_lg
 ```
 
-### 1. Standardize and save dataset to disk.
+#### 1. Standardize and save dataset to disk.
 Loads in a dataset from HF, or any dataset that you have and stores it in a 
 standardized format with columns for `document` and `summary:reference`.  
 
-#### Example: Save CNN / Daily Mail validation split to disk as a jsonl file.
+##### Example: Save CNN / Daily Mail validation split to disk as a jsonl file.
 ```shell
 python preprocessing.py \
 --standardize \
@@ -286,7 +285,7 @@ python preprocessing.py \
 --save_jsonl_path preprocessing/cnn_dailymail.validation.jsonl
 ```
 
-#### Example: Load custom `my_dataset.jsonl`, standardize, and save.
+##### Example: Load custom `my_dataset.jsonl`, standardize, and save.
 ```shell
 python preprocessing.py \
 --standardize \
@@ -304,14 +303,14 @@ If you wish to use column names other than `document` and `summary:reference`, y
 using the `doc_column` and `reference_column` command-line arguments.
 
 
-### 2. Add predictions to the saved dataset.
+#### 2. Add predictions to the saved dataset.
 Takes a saved dataset that has already been standardized and adds predictions to it 
 from prediction jsonl files. Cached predictions for several models available here:
  https://storage.googleapis.com/sfr-summvis-data-research/predictions.zip
  
 You may also generate your own predictions using this [this script](generation.py). 
 
-#### Example: Add 6 prediction files for PEGASUS and BART to the dataset.
+##### Example: Add 6 prediction files for PEGASUS and BART to the dataset.
 ```shell
 python preprocessing.py \
 --join_predictions \
@@ -326,12 +325,12 @@ predictions/pegasus-xsum.cnndm.validation.results.anonymized \
 --save_jsonl_path preprocessing/cnn_dailymail.validation.jsonl
 ```
 
-### 3. Run the preprocessing workflow and save the dataset.
+#### 3. Run the preprocessing workflow and save the dataset.
 Takes a saved dataset that has been standardized, and predictions already added. 
 Applies all the preprocessing steps to it (running `spaCy`, lexical and semantic aligners), 
 and stores the processed dataset back to disk.
 
-#### Example: Autorun with default settings on a few examples to try it.
+##### Example: Autorun with default settings on a few examples to try it.
 ```shell
 python preprocessing.py \
 --workflow \
@@ -340,7 +339,7 @@ python preprocessing.py \
 --try_it
 ```
 
-#### Example: Autorun with default settings on all examples.
+##### Example: Autorun with default settings on all examples.
 ```shell
 python preprocessing.py \
 --workflow \
