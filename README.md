@@ -215,7 +215,7 @@ The simplest way to use SummVis with your own data is to create a jsonl file of 
 ```
 
 The key for the reference summary must equal `summary:reference` and the key for any other summary must be of the form
-`summary:<summary_name>`, e.g. `summary:BART`. The document is required, as is at least one summary (reference, other, or both).
+`summary:<summary_name>`, e.g. `summary:BART`. The document and at least one summary (reference, other, or both) are required.
 
 The following additional install step is required.:
 ```
