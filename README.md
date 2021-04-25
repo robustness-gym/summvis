@@ -1,6 +1,7 @@
-<h1 align="center">SummVis</h1>
-
-<h2 align="center">Interactive Visual Analysis of Models, Data, and Evaluation for Text Summarization</h2>
+<p align="center">
+    <img src="website/title.png" width="400" alt="SummVis"/>
+</p>
+<h3 align="center">Interactive Visual Analysis of Models, Data, and Evaluation for Text Summarization</h3>
 
 SummVis is an open-source visualization tool that supports fine-grained analysis of summarization models, data, and evaluation 
 metrics. Through its lexical and semantic visualizations, the tools offers an easy 
