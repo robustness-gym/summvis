@@ -1,6 +1,6 @@
 # SummVis
 
-### SummVis: Interactive Visual Analysis of Models, Data, and Evaluation for Text Summarization
+#### SummVis: Interactive Visual Analysis of Models, Data, and Evaluation for Text Summarization
  
 Authors: [Jesse Vig](https://twitter.com/jesse_vig)<sup>1</sup>, 
 [Wojciech Kryściński](https://twitter.com/iam_wkr)<sup>1</sup>,
