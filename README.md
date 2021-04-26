@@ -93,7 +93,7 @@ unzip preprocessing/cnn_dailymail_1000.validation.anonymized.zip -d preprocessin
 Next, we'll need to add the original examples from the CNN / Daily Mail dataset to deanonymize the data (this information 
 is omitted for copyright reasons). The `preprocessing.py` script can be used for this with the `--deanonymize` flag.
 
-#### Deanonymize 10 examples (`try_it` mode):
+#### Deanonymize 10 examples:
 ```shell
 python preprocessing.py \
 --deanonymize \
@@ -101,8 +101,8 @@ python preprocessing.py \
 --dataset cnn_dailymail \
 --version 3.0.0 \
 --split validation \
---processed_dataset_path data/try:cnn_dailymail_1000.validation \
---try_it
+--processed_dataset_path data/10:cnn_dailymail_1000.validation \
+--n_samples 10
 ```
 This will take either a few seconds or a few minutes depending on whether you've previously loaded CNN/DailyMail from 
 the Datasets library.
@@ -115,6 +115,8 @@ streamlit run summvis.py
 ```
 
 ## Running with pre-loaded datasets
+
+In this section we extend the approach described in [Quickstart](#quickstart) to other pre-loaded datasets.
 
 ### 1. Download one of the pre-loaded datasets:
 
