@@ -283,7 +283,7 @@ $(document).ready(
             if (!isViewable(topHighlight[0])) {
                 return;
             }
-            topHighlight.tooltip({title: `Most similar (${topDocSim})`, trigger: "manual"});
+            topHighlight.tooltip({title: `Most similar (${topDocSim})`, trigger: "manual", container: "body"});
             topHighlight.tooltip("show");
             const tooltipTimestamp = Date.now();
             // Do not use .data() method to set data attributes as they are not searchable
