@@ -280,7 +280,7 @@ $(document).ready(
             const topDocHighlightId = $(el).data("top-doc-highlight-id");
             const topDocSim = $(el).data("top-doc-sim");
             const topHighlight = $(`.display .main-doc .highlight[data-highlight-id=${topDocHighlightId}]`);
-            if (!isViewable(topHighlight[0])) {
+            if (!isViewable(topHighlight)) {
                 return;
             }
             topHighlight.tooltip({title: `Most similar (${topDocSim})`, trigger: "manual", container: "body"});
@@ -354,14 +354,18 @@ $(document).ready(
             $(this).addClass("selected");
             $(this).removeClass("annotation-inactive");
             $('.summary-item [title]').removeAttr("title");
-            if (!isViewable($(matchedDocHighlight)[0])) {
+            if (!isViewable($(matchedDocHighlight))) {
                 $(this).attr("title", "Click to scroll to most similar word.")
             }
         }
 
         function isViewable(el) {
-            const rect = el.getBoundingClientRect();
-            return (rect.top >= 0) && (rect.bottom <= window.innerHeight);
+            const elTop = el.offset().top;
+            const elBottom = elTop + el.outerHeight();
+            const scrollRegion = $(".display .main-doc");
+            const scrollTop = scrollRegion.offset().top;
+            const scrollBottom = scrollTop + scrollRegion.outerHeight();
+            return elTop > scrollTop && elBottom < scrollBottom;
         }
 
         // Initialization
