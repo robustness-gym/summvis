@@ -101,8 +101,7 @@ the [Datasets](https://huggingface.co/datasets) library.
 ```shell
 sh quickstart.sh
 ```
-This will create the file `data/cnn_dailymail_10.validation`, which contains the first 10 pre-cached examples from the CNN / Daily Mail validation set.  
-For more details on the loading process, see [Running with pre-loaded datasets](#Running with pre-loaded datasets).
+This will create the file `data/cnn_dailymail_10.validation`, which contains the first 10 pre-cached examples from the CNN / Daily Mail validation set. For more details on the loading process, see [Running with pre-loaded datasets](#running-with-pre-loaded-datasets).
 
 ### 3. Start the tool
 ```shell
@@ -229,7 +228,7 @@ You have two options to load this jsonl file into the tool:
 
 #### Option 1: Load the jsonl file directly
 
-The disadvantage of this approach is that all computations are performed in realtime. This is particularly expensive for 
+The disadvantage of this approach is that all computations are performed in real-time. This is particularly expensive for 
 semantic similarity, which uses a Transformer model. At a result, each example will be slow to load (~5-15 seconds on a Macbook Pro).
 
 1. Place the jsonl file in the `data` directory. Note that the file must be named with a `.jsonl` extension.
