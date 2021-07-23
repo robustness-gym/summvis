@@ -1,0 +1,18 @@
+name: summvis
+channels:
+  - defaults
+dependencies:
+ - pip=21.1.3
+ - python=3.8
+ - pip:
+   - spacy==3.0.3
+   - streamlit==0.77.0
+   - st-annotated-text==1.1.0
+   - transformers==4.2.2
+   - torch==1.7.1
+   - bert-score==0.3.7
+   - rouge-score==0.0.4
+   - toolz==0.11.1
+   - nltk==3.4.5
+   - robustnessgym==0.0.4a0
+   - sentencepiece==0.1.95

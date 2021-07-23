@@ -65,60 +65,58 @@ The SummVis interface is shown below. The example displayed is the first record 
 Currently only English text is supported.
 
 ## Installation
+### Option 1: Conda (recommended)
+The following will create a conda environment named `summvis`
+```
+git clone https://github.com/robustness-gym/summvis.git
+cd summvis
+conda env create -f environment.yml
+conda activate summvis
+python -m spacy download en_core_web_sm
+```
+
+Installation takes around **2 minutes** on a Macbook Pro.
+
+### Option 2: Pip
 **IMPORTANT**: Please use `python>=3.8` since some dependencies require that for installation.
 ```shell
 # Requires python>=3.8
 git clone https://github.com/robustness-gym/summvis.git
 cd summvis
 pip install -r requirements.txt
-python -m spacy download en_core_web_sm
+python -m spacy download en_core_web_lg
 ```
-
-Installation takes around 2 minutes on a Macbook Pro.
 
 ## Quickstart
-Follow the steps below to start using SummVis immediately.
+Start using SummVis immediately on a small sample from the [CNN / Daily Mail](https://huggingface.co/datasets/cnn_dailymail) validation set. 
 
-### 1. Download and extract data
-Download our pre-cached dataset that contains predictions for state-of-the-art models such as PEGASUS and BART on 
-1000 examples taken from the CNN / Daily Mail validation set.
-```shell
-mkdir data
-mkdir preprocessing
-curl https://storage.googleapis.com/sfr-summvis-data-research/cnn_dailymail_1000.validation.anonymized.zip --output preprocessing/cnn_dailymail_1000.validation.anonymized.zip
-unzip preprocessing/cnn_dailymail_1000.validation.anonymized.zip -d preprocessing/
-``` 
-
-### 2. Deanonymize data
-Next, we'll need to add the original examples from the CNN / Daily Mail dataset to deanonymize the data (this information 
-is omitted for copyright reasons). The `preprocessing.py` script can be used for this with the `--deanonymize` flag.
-
-#### Deanonymize 10 examples:
-```shell
-python preprocessing.py \
---deanonymize \
---dataset_rg preprocessing/cnn_dailymail_1000.validation.anonymized \
---dataset cnn_dailymail \
---version 3.0.0 \
---split validation \
---processed_dataset_path data/10:cnn_dailymail_1000.validation \
---n_samples 10
+### 1. Activate conda environment (if [installed](#Installation) using Conda)
 ```
-This will take either a few seconds or a few minutes depending on whether you've previously loaded CNN/DailyMail from 
-the Datasets library.
+conda activate summvis
+```
 
-### 3. Run SummVis
-Finally, we're ready to run the Streamlit app. Once the app loads, make sure it's pointing to the right `File` at the top
-of the interface.
+### 2. Cache the data  
+This may take a **few minutes** if you haven't previously loaded CNN / DailyMail from 
+the [Datasets](https://huggingface.co/datasets) library.
+```shell
+sh quickstart.sh
+```
+This will create the file `data/cnn_dailymail_10.validation`, which contains the first 10 pre-cached examples from the CNN / Daily Mail validation set.  
+For more details on the loading process, see [Running with pre-loaded datasets](#Running with pre-loaded datasets).
+
+### 3. Start the tool
 ```shell
 streamlit run summvis.py
 ```
+The tool will automatically load the dataset created in the previous step. If you have other files in the `data` directory, you
+will need to select the appropriate file from the dropdown in the upper-right corner of the interface.
 
 ## Running with pre-loaded datasets
 
-In this section we extend the approach described in [Quickstart](#quickstart) to other pre-loaded datasets.
-
 ### 1. Download one of the pre-loaded datasets:
+
+Download our pre-cached dataset that contains predictions for state-of-the-art models such as PEGASUS and BART on 
+CNN / Daily Mail and XSum validation sets.
 
 ##### CNN / Daily Mail (1000 examples from validation set): https://storage.googleapis.com/sfr-summvis-data-research/cnn_dailymail_1000.validation.anonymized.zip
 ##### CNN / Daily Mail (full validation set): https://storage.googleapis.com/sfr-summvis-data-research/cnn_dailymail.validation.anonymized.zip
@@ -144,6 +142,9 @@ unzip preprocessing/xsum_1000.validation.anonymized.zip -d preprocessing/
 ``` 
 
 ### 2. Deanonymize *n* examples:
+
+Next, we'll need to add the original examples from the CNN / Daily Mail or XSum datasets to deanonymize the data (this information 
+is omitted for copyright reasons). The `preprocessing.py` script can be used for this with the `--deanonymize` flag.
 
 Set the `--n_samples` argument and name the `--processed_dataset_path` output file accordingly.
 
@@ -356,7 +357,7 @@ When referencing this repository, please cite [this paper](https://arxiv.org/abs
 ```
 @misc{vig2021summvis,
       title={SummVis: Interactive Visual Analysis of Models, Data, and Evaluation for Text Summarization}, 
-      author={Jesse Vig and Wojciech Kryscinski and Karan Goel and Nazneen Fatema Rajani},
+      author={Jesse Vig and Wojciech Kry{\'s}ci{\'n}ski and Karan Goel and Nazneen Fatema Rajani},
       year={2021},
       eprint={2104.07605},
       archivePrefix={arXiv},
