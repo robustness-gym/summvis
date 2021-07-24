@@ -71,7 +71,7 @@ The following will create a conda environment named `summvis`
 git clone https://github.com/robustness-gym/summvis.git
 cd summvis
 conda env create -f environment.yml
-conda activate summvis # OR "source activate summvis" on older Conda versions
+conda activate summvis # OR "source activate summvis" on older conda versions
 python -m spacy download en_core_web_sm
 ```
 
@@ -90,9 +90,9 @@ python -m spacy download en_core_web_lg
 ## Quickstart
 Start using SummVis immediately on a small sample from the [CNN / Daily Mail](https://huggingface.co/datasets/cnn_dailymail) validation set. 
 
-### 1. Activate conda environment (if [installed](#Installation) using Conda)
+### 1. Activate conda environment (if [installed](#Installation) using conda)
 ```
-conda activate summvis # OR "source activate summvis" on older Conda versions
+conda activate summvis # OR "source activate summvis" on older conda versions
 ```
 
 ### 2. Cache the data  
