@@ -84,7 +84,7 @@ Installation takes around **2 minutes** on a Macbook Pro.
 git clone https://github.com/robustness-gym/summvis.git
 cd summvis
 pip install -r requirements.txt
-python -m spacy download en_core_web_lg
+python -m spacy download en_core_web_sm
 ```
 
 ## Quickstart
