@@ -1,3 +1,4 @@
+# environment.yml must be kept in sync
 spacy==3.0.3
 streamlit==0.77.0
 st-annotated-text==1.1.0
