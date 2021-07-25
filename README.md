@@ -219,6 +219,8 @@ The simplest way to use SummVis with your own data is to create a jsonl file of 
 The key for the reference summary must equal `summary:reference` and the key for any other summary must be of the form
 `summary:<summary_name>`, e.g. `summary:BART`. The document and at least one summary (reference, other, or both) are required.
 
+**NOTE**: SummVis is optimized for documents that are approximately the length of a news article. Documents that are significantly longer than this may render slower in the tool.
+
 The following additional install step is required.:
 ```
 python -m spacy download en_core_web_lg
@@ -228,8 +230,8 @@ You have two options to load this jsonl file into the tool:
 
 #### Option 1: Load the jsonl file directly
 
-The disadvantage of this approach is that all computations are performed in real-time. This is particularly expensive for 
-semantic similarity, which uses a Transformer model. At a result, each example will be slow to load (~5-15 seconds on a Macbook Pro).
+This is the simplest approach for loading your data into SummVis. The disadvantage of this approach is that all computations are performed in real-time, which is particularly expensive for 
+the semantic similarity computation. At a result, each example will be slow to load (~5-15 seconds on a Macbook Pro).
 
 1. Place the jsonl file in the `data` directory. Note that the file must be named with a `.jsonl` extension.
 2. Start SummVis: `streamlit run summvis.py` 
