@@ -231,7 +231,7 @@ You have two options to load this jsonl file into the tool:
 #### Option 1: Load the jsonl file directly
 
 This is the simplest approach for loading your data into SummVis. The disadvantage of this approach is that all computations are performed in real-time, which is particularly expensive for 
-the semantic similarity computation. At a result, each example will be slow to load (~5-15 seconds on a Macbook Pro).
+the semantic similarity computation. As a result, each example will be slow to load (~5-15 seconds on a Macbook Pro).
 
 1. Place the jsonl file in the `data` directory. Note that the file must be named with a `.jsonl` extension.
 2. Start SummVis: `streamlit run summvis.py` 
