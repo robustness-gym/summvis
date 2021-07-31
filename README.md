@@ -199,10 +199,13 @@ of the interface.
 ```shell
 streamlit run summvis.py
 ```
-
-Alternately, if you need to point SummVis to a folder where your data is stored.
+Alternatively, you may point SummVis to a folder where your data is stored:
 ```shell
 streamlit run summvis.py -- --path your/path/to/data
+```
+You may further specify the filename within the folder:
+```shell
+streamlit run summvis.py -- --path your/path/to/data --file filename
 ```
 Note that the additional `--` is not a mistake, and is required to pass command-line arguments in streamlit.
 
@@ -219,7 +222,8 @@ The simplest way to use SummVis with your own data is to create a jsonl file of 
 The key for the reference summary must equal `summary:reference` and the key for any other summary must be of the form
 `summary:<summary_name>`, e.g. `summary:BART`. The document and at least one summary (reference, other, or both) are required.
 
-**NOTE**: SummVis is optimized for documents that are approximately the length of a news article. Documents that are significantly longer than this may render slower in the tool.
+**NOTE**: SummVis is optimized for documents that are approximately the length of a news article. Documents that are 
+significantly longer than this may render slower in the tool, especially if many summaries are displayed.
 
 The following additional install step is required.:
 ```

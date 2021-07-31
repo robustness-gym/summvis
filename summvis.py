@@ -238,9 +238,6 @@ def show_main(example):
 
     document, summaries = select_comparison(example)
     layout = st.sidebar.radio("Layout:", ["Vertical", "Horizontal"]).lower()
-    # if layout == "horizontal":
-    #     scroll = st.sidebar.checkbox(label="Scroll sections", value=True)
-    # else:
     scroll = True
     gray_out_stopwords = st.sidebar.checkbox(label="Gray out stopwords", value=True)
 
@@ -353,12 +350,12 @@ if __name__ == "__main__":
     ])
     if args.file:
         try:
-            file_index = files.index(args.input)
+            file_index = files.index(args.file)
         except:
-            raise FileNotFoundError(f"File not found: {args.input}")
+            raise FileNotFoundError(f"File not found: {args.file}")
     else:
         file_index = 0
-        col1, col2 = st.beta_columns((3, 1))
+    col1, col2 = st.beta_columns((3, 1))
     filename = col1.selectbox(label="File:", options=files, index=file_index)
     dataset = load_dataset(str(path / filename))
 
