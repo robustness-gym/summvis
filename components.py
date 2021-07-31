@@ -1,4 +1,3 @@
-from pathlib import Path
 from collections import defaultdict
 from itertools import count
 from operator import itemgetter
@@ -7,11 +6,10 @@ from typing import Dict, Optional
 from typing import List, Tuple, Union
 
 import htbuilder
-from htbuilder import span, script, style, link, div, styles, HtmlElement
+import streamlit as st
+from htbuilder import span, div, script, style, link, styles, HtmlElement, br
 from htbuilder.units import px
 from spacy.tokens import Doc
-
-import streamlit as st
 
 palette = [
     "#66c2a5",
@@ -448,6 +446,7 @@ class MultiUnderline:
         # Collection of html elements
         elements = []
 
+        first_token_in_line = True
         for pos, token in enumerate(tokens):
             # Remove spans that are no longer active (end < pos)
             slot_to_spans = defaultdict(
@@ -459,7 +458,9 @@ class MultiUnderline:
             )
 
             # Add underlines to space between tokens for any continuing underlines
-            if pos > 0:
+            if first_token_in_line:
+                first_token_in_line = False
+            else:
                 elements.append(self._get_underline_element(SPACE, slot_to_spans))
 
             # Find slot for any new spans
@@ -492,9 +493,12 @@ class MultiUnderline:
                             if not spans:  # If slot is free, take it
                                 spans.append(new_span)
                                 break
-
-            # Add underlines to token for all active spans
-            elements.append(self._get_underline_element(token, slot_to_spans))
+            if token in ("\n", "\r", "\r\n"):
+                elements.append(br())
+                first_token_in_line = True
+            else:
+                # Add underlines to token for all active spans
+                elements.append(self._get_underline_element(token, slot_to_spans))
         return elements
 
     def _get_underline_element(self, token, slot_to_spans):
