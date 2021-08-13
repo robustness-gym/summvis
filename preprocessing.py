@@ -347,7 +347,14 @@ def run_workflow(
     )
 
     # Run the Spacy pipeline on all preprocessed text columns
-    nlp = load('en_core_web_lg')
+    try:
+        nlp = load('en_core_web_lg')
+    except OSError:
+        nlp = None
+
+    if nlp is None:
+        raise OSError('Missing spaCy model "en_core_web_lg". Please run "python -m spacy download en_core_web_lg"')
+
     nlp.add_pipe('sentencizer', before="parser")
     spacy = Spacy(nlp=nlp)
     dataset = spacy(
