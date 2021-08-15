@@ -25,6 +25,7 @@ _Note: SummVis is under active development, so expect continued updates in the c
 - [Quickstart](#quickstart)
 - [Running with pre-loaded datasets](#running-with-pre-loaded-datasets)
 - [Get your data into SummVis](#get-your-data-into-summvis)
+- [Deploying SummVis remotely](#deploying-summvis-remotely)
 - [Citation](#citation)
 - [Acknowledgements](#acknowledgements)
 
@@ -354,6 +355,14 @@ python preprocessing.py \
 --processed_dataset_path data/cnn_dailymail
 ```
 
+## Deploying SummVis remotely
+
+See these tutorials on deploying a Streamlit app to various cloud services (from [Streamlit docs](https://docs.streamlit.io/en/stable/streamlit_faq.html)):
+
+* [How to Deploy Streamlit to a Free Amazon EC2 instance](https://towardsdatascience.com/how-to-deploy-a-streamlit-app-using-an-amazon-free-ec2-instance-416a41f69dc3), by Rahul Agarwal   
+* [Host Streamlit on Heroku](https://towardsdatascience.com/quickly-build-and-deploy-an-application-with-streamlit-988ca08c7e83), by Maarten Grootendorst   
+* [Host Streamlit on Azure](https://towardsdatascience.com/deploying-a-streamlit-web-app-with-azure-app-service-1f09a2159743), by Richard Peterson   
+* [Host Streamlit on 21YunBox](https://www.21yunbox.com/docs/#/deploy-streamlit), by Toby Lei 
 
 ## Citation
 
