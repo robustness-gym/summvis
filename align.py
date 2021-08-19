@@ -27,36 +27,38 @@ class EmbeddingModel(ABC):
 
 class ContextualEmbedding(EmbeddingModel):
 
-    def __init__(self, model, tokenizer_name, max_length):
+    def __init__(self, model, tokenizer_name, max_length, batch_size=32):
         self.model = model
         self.tokenizer = SpacyHuggingfaceTokenizer(tokenizer_name, max_length)
         self._device = model.device
+        self.batch_size = batch_size
 
     def embed(
         self,
         sents: List[Span]
     ):
-        encoded_input, special_tokens_masks, token_alignments = self.tokenizer.batch_encode(sents)
-        encoded_input = {k: v.to(self._device) for k, v in encoded_input.items()}
-        with torch.no_grad():
-            model_output = self.model(**encoded_input)
-            embeddings = model_output[0].cpu()
-
         spacy_embs_list = []
-        for embs, mask, token_alignment \
-            in zip(embeddings, special_tokens_masks, token_alignments):
-            mask = torch.tensor(mask)
-            embs = embs[mask == 0]  # Filter embeddings at special token positions
-            spacy_embs = []
-            for hf_idxs in token_alignment:
-                if hf_idxs is None:
-                    pooled_embs = torch.zeros_like(embs[0])
-                else:
-                    pooled_embs = embs[hf_idxs].mean(dim=0)  # Pool embeddings that map to the same spacy token
-                spacy_embs.append(pooled_embs.numpy())
-            spacy_embs = np.stack(spacy_embs)
-            spacy_embs = spacy_embs / np.linalg.norm(spacy_embs, axis=-1, keepdims=True)  # Normalize
-            spacy_embs_list.append(spacy_embs)
+        for start_idx in range(0, len(sents), self.batch_size):
+            batch = sents[start_idx: start_idx + self.batch_size]
+            encoded_input, special_tokens_masks, token_alignments = self.tokenizer.batch_encode(batch)
+            encoded_input = {k: v.to(self._device) for k, v in encoded_input.items()}
+            with torch.no_grad():
+                model_output = self.model(**encoded_input)
+                embeddings = model_output[0].cpu()
+            for embs, mask, token_alignment \
+                in zip(embeddings, special_tokens_masks, token_alignments):
+                mask = torch.tensor(mask)
+                embs = embs[mask == 0]  # Filter embeddings at special token positions
+                spacy_embs = []
+                for hf_idxs in token_alignment:
+                    if hf_idxs is None:
+                        pooled_embs = torch.zeros_like(embs[0])
+                    else:
+                        pooled_embs = embs[hf_idxs].mean(dim=0)  # Pool embeddings that map to the same spacy token
+                    spacy_embs.append(pooled_embs.numpy())
+                spacy_embs = np.stack(spacy_embs)
+                spacy_embs = spacy_embs / np.linalg.norm(spacy_embs, axis=-1, keepdims=True)  # Normalize
+                spacy_embs_list.append(spacy_embs)
         for embs, sent in zip(spacy_embs_list, sents):
             assert len(embs) == len(sent)
         return spacy_embs_list
