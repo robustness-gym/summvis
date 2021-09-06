@@ -96,7 +96,7 @@ conda activate summvis # OR "source activate summvis" on older conda versions
 ```
 
 ### 2. Cache the data  
-This may take a **few minutes** if you haven't previously loaded CNN / DailyMail from 
+This may take **several minutes** if you haven't previously loaded CNN / DailyMail from 
 the Datasets library.
 ```shell
 sh quickstart.sh
@@ -124,7 +124,7 @@ CNN / Daily Mail and XSum validation sets.
 
 We recommend that you choose the smallest dataset that fits your need in order to minimize download / preprocessing time.
 
-#### Example: Download and unzip CNN / Daily Mail
+#### Example: Download and unzip CNN / Daily Mail (1000 example dataset)
 ```shell
 mkdir data
 mkdir preprocessing
@@ -132,7 +132,7 @@ curl https://storage.googleapis.com/sfr-summvis-data-research/cnn_dailymail_1000
 unzip preprocessing/cnn_dailymail_1000.validation.anonymized.zip -d preprocessing/
 ``` 
 
-#### Example: Download and unzip XSum
+#### Example: Download and unzip XSum (1000 example dataset)
 ```shell
 mkdir data
 mkdir preprocessing
@@ -155,7 +155,7 @@ python preprocessing.py \
 --dataset cnn_dailymail \
 --version 3.0.0 \
 --split validation \
---processed_dataset_path data/100:cnn_dailymail_1000.validation \
+--processed_dataset_path data/cnn_dailymail_100.validation \
 --n_samples 100
 ```
 
@@ -167,7 +167,7 @@ python preprocessing.py \
 --dataset cnn_dailymail \
 --version 3.0.0 \
 --split validation \
---processed_dataset_path data/full:cnn_dailymail_1000.validation \
+--processed_dataset_path data/cnn_dailymail_1000.validation \
 --n_samples 1000
 ```
 
@@ -179,7 +179,7 @@ python preprocessing.py \
 --dataset cnn_dailymail \
 --version 3.0.0 \
 --split validation \
---processed_dataset_path data/full:cnn_dailymail.validation
+--processed_dataset_path data/cnn_dailymail.validation
 ```
 
 #### Example: Deanonymize all pre-loaded examples from XSum (1000 examples dataset):
@@ -189,7 +189,7 @@ python preprocessing.py \
 --dataset_rg preprocessing/xsum_1000.validation.anonymized \
 --dataset xsum \
 --split validation \
---processed_dataset_path data/full:xsum_1000.validation \
+--processed_dataset_path data/xsum_1000.validation \
 --n_samples 1000
 ```
 
@@ -241,6 +241,8 @@ the semantic similarity computation. As a result, each example will be slow to l
 2. Start SummVis: `streamlit run summvis.py` 
 3. Select your jsonl file from the `File` dropdown at the top of the interface.
 
+Note: To avoid additional text cleaning that may remove newlines, etc., use `streamlit run summvis.py -- --no_clean`
+
 #### Option 2: Preprocess jsonl file (recommended)
 
 You may run `preprocessing.py` to precompute all data required in the interface (running `spaCy`, lexical and semantic
@@ -255,16 +257,20 @@ You may run `preprocessing.py` to precompute all data required in the interface 
     --dataset_jsonl path/to/my_dataset.jsonl \
     --processed_dataset_path path/to/my_cache_file
     ```
-     You may wish to first try it with a subset of your data by adding the following argument: `--n_samples <number_of_samples>`.
+    Additional options:   
+    &nbsp;&nbsp;`--n_samples <number_of_samples>`: Process the first `number_of_samples` samples only (recommended).   
+    &nbsp;&nbsp;`--no_clean`: Do not perform additional text cleaning that may remove newlines, etc.   
 
 2. Copy output cache file to the `data` directory
-3. Start SummVis: `streamlit run summvis.py`  
+3. Start SummVis: `streamlit run summvis.py`   
 4. Select your file from the `File` dropdown at the top of the interface.
 
-As an alternative to steps 2-3, you may point SummVis to a folder in which the cache file is stored:
+As an alternative to steps 2-4, you may point SummVis directly to the cache file:
 ```shell
-streamlit run summvis.py -- --path <parent_directory_of_cache_file>
+streamlit run summvis.py -- --path <parent_directory_of_cache_file> --file <cache_filename>
 ```
+
+
 ### Generating predictions
 The instructions in the previous section assume access to model predictions. We also provide tools to load predictions,
  either by downloading datasets with precomputed predictions or running

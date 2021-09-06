@@ -15,7 +15,7 @@ from spacy.attrs import DEP, IS_ALPHA, IS_PUNCT, IS_STOP, LEMMA, LOWER, TAG, SEN
 from spacy.tokens import Doc
 
 from align import BertscoreAligner, NGramAligner, StaticEmbeddingAligner
-from utils import preprocess_text
+from utils import clean_text
 
 set_logging_level('critical')
 logger = logging.getLogger(__name__)
@@ -262,7 +262,11 @@ def deanonymize_dataset(
 
     # Preprocessing all the text columns
     dataset = dataset.update(
-        lambda x: {f'preprocessed_{k}': preprocess_text(x[k]) for k in text_columns}
+        lambda x:
+            {
+                f'preprocessed_{k}': x[k] if args.no_clean else clean_text(x[k])
+                for k in text_columns
+            }
     )
 
     # Run the Spacy pipeline on all preprocessed text columns
@@ -343,7 +347,10 @@ def run_workflow(
 
     # Preprocessing all the text columns
     dataset = dataset.update(
-        lambda x: {f'preprocessed_{k}': preprocess_text(x[k]) for k in text_columns}
+        lambda x: {
+            f'preprocessed_{k}': x[k] if args.no_clean else clean_text(x[k])
+            for k in text_columns
+        }
     )
 
     # Run the Spacy pipeline on all preprocessed text columns
@@ -631,7 +638,8 @@ if __name__ == '__main__':
     parser.add_argument('--anonymize', action='store_true', default=False,
                         help="Anonymize by removing document and reference summary "
                              "columns of the original dataset.")
-
+    parser.add_argument('--no_clean', action='store_true', default=False,
+                        help="Do not clean text (remove extraneous spaces, newlines).")
     args = parser.parse_args()
 
     if args.standardize:

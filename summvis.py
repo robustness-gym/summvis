@@ -16,7 +16,7 @@ from components import MainView
 from preprocessing import NGramAlignerCap, StaticEmbeddingAlignerCap, \
     BertscoreAlignerCap
 from preprocessing import _spacy_decode, _spacy_encode
-from utils import preprocess_text
+from utils import clean_text
 
 MIN_SEMANTIC_SIM_THRESHOLD = 0.1
 MAX_SEMANTIC_SIM_TOP_K = 10
@@ -95,7 +95,7 @@ def retrieve(dataset, index, filename=None):
         if not text:
             st.error("Document is blank")
             return
-        document = nlp(preprocess_text(text))
+        document = nlp(text if args.no_clean else clean_text(text))
     document._.name = "Document"
     document._.column = "document"
 
@@ -112,7 +112,7 @@ def retrieve(dataset, index, filename=None):
         except KeyError:
             text = data.get('highlights')
         if text:
-            reference = nlp(preprocess_text(text))
+            reference = nlp(text if args.no_clean else clean_text(text))
         else:
             reference = None
     if reference is not None:
@@ -137,7 +137,8 @@ def retrieve(dataset, index, filename=None):
             if not is_lg:
                 st.error("'en_core_web_lg model' is required unless loading from cached file."
                          "To install: 'python -m spacy download en_core_web_lg'")
-            pred = nlp(preprocess_text(data[f"summary:{model_name}"]))
+            text = data[f"summary:{model_name}"]
+            pred = nlp(text if args.no_clean else clean_text(text))
 
         parts = model_name.split("-")
         primary_sort = 0
@@ -335,6 +336,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--path', type=str, default='data')
     parser.add_argument('--file', type=str)
+    parser.add_argument('--no_clean', action='store_true', default=False,
+                        help="Do not clean text (remove extraneous spaces, newlines).")
     args = parser.parse_args()
 
     nlp, is_lg = get_nlp()
