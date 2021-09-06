@@ -73,7 +73,6 @@ git clone https://github.com/robustness-gym/summvis.git
 cd summvis
 conda env create -f environment.yml
 conda activate summvis # OR "source activate summvis" on older conda versions
-python -m spacy download en_core_web_sm
 ```
 
 Installation takes around **2 minutes** on a Macbook Pro.
@@ -84,8 +83,8 @@ Installation takes around **2 minutes** on a Macbook Pro.
 # Requires python>=3.8
 git clone https://github.com/robustness-gym/summvis.git
 cd summvis
+pip install --upgrade pip
 pip install -r requirements.txt
-python -m spacy download en_core_web_sm
 ```
 
 ## Quickstart

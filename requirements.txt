@@ -3,10 +3,11 @@ spacy==3.0.3
 streamlit==0.77.0
 st-annotated-text==1.1.0
 transformers==4.2.2
-torch==1.7.1
+torch>=1.7.1,<2.0.0
 bert-score==0.3.7
 rouge-score==0.0.4
 toolz==0.11.1
 nltk==3.4.5
 robustnessgym==0.0.4a0
 sentencepiece==0.1.95
+en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0.tar.gz
