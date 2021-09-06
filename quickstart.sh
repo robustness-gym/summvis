@@ -1,4 +1,3 @@
-python -m spacy download en_core_web_sm &&
 mkdir -p data &&
 mkdir -p preprocessing &&
 curl https://storage.googleapis.com/sfr-summvis-data-research/cnn_dailymail_1000.validation.anonymized.zip > preprocessing/cnn_dailymail_1000.validation.anonymized.zip &&
