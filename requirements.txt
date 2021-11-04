@@ -9,5 +9,7 @@ rouge-score==0.0.4
 toolz==0.11.1
 nltk==3.4.5
 robustnessgym==0.0.4a0
+torchmetrics==0.5.1
+pytorch-lightning==1.4.5
 sentencepiece==0.1.95
 en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0.tar.gz
