@@ -7,15 +7,16 @@ from pathlib import Path
 
 import spacy
 import streamlit as st
-from robustnessgym import Dataset, Identifier
-from robustnessgym import Spacy
+from meerkat import DataPanel
+# from robustnessgym import Dataset, Identifier
+# from robustnessgym import Spacy
 from spacy.tokens import Doc
 
 from align import NGramAligner, BertscoreAligner, StaticEmbeddingAligner
 from components import MainView
-from preprocessing import NGramAlignerCap, StaticEmbeddingAlignerCap, \
-    BertscoreAlignerCap
-from preprocessing import _spacy_decode, _spacy_encode
+# from preprocessing import NGramAlignerCap, StaticEmbeddingAlignerCap, \
+#     BertscoreAlignerCap
+# from preprocessing import _spacy_decode, _spacy_encode
 from utils import clean_text
 
 MIN_SEMANTIC_SIM_THRESHOLD = 0.1
@@ -45,11 +46,11 @@ def load_from_index(filename, index):
 @st.cache(allow_output_mutation=True)
 def load_dataset(path: str):
     if path.endswith('.jsonl'):
-        return Dataset.from_jsonl(path)
+        return DataPanel.from_jsonl(path)
     try:
-        return Dataset.load_from_disk(path)
+        return DataPanel.read(path)
     except NotADirectoryError:
-        return Dataset.from_jsonl(path)
+        return DataPanel.from_jsonl(path)
 
 
 @st.cache(allow_output_mutation=True)
@@ -81,9 +82,10 @@ def retrieve(dataset, index, filename=None):
     id_ = data.get('id', '')
 
     try:
-        document = rg_spacy.decode(
-            data[rg_spacy.identifier(columns=['preprocessed_document'])]
-        )
+        document = data['spacy:document']
+        # rg_spacy.decode(
+        #     data[rg_spacy.identifier(columns=['preprocessed_document'])]
+        # )
     except KeyError:
         if not is_lg:
             st.error("'en_core_web_lg model' is required unless loading from cached file."
@@ -100,9 +102,10 @@ def retrieve(dataset, index, filename=None):
     document._.column = "document"
 
     try:
-        reference = rg_spacy.decode(
-            data[rg_spacy.identifier(columns=['preprocessed_summary:reference'])]
-        )
+        reference = data['spacy:reference']
+        # reference = rg_spacy.decode(
+        #     data[rg_spacy.identifier(columns=['preprocessed_summary:reference'])]
+        # )
     except KeyError:
         if not is_lg:
             st.error("'en_core_web_lg model' is required unless loading from cached file."
@@ -130,9 +133,10 @@ def retrieve(dataset, index, filename=None):
     preds = []
     for model_name in model_names:
         try:
-            pred = rg_spacy.decode(
-                data[rg_spacy.identifier(columns=[f"preprocessed_summary:{model_name}"])]
-            )
+            pred = data[f"spacy:summary:{model_name}"]
+            # pred = rg_spacy.decode(
+            #     data[rg_spacy.identifier(columns=[f"preprocessed_summary:{model_name}"])]
+            # )
         except KeyError:
             if not is_lg:
                 st.error("'en_core_web_lg model' is required unless loading from cached file."
@@ -245,15 +249,17 @@ def show_main(example):
     # Gather data
     try:
         lexical_alignments = [
-            NGramAlignerCap.decode(
-                example.data[
-                    Identifier(NGramAlignerCap.__name__)(
-                        columns=[
-                            f'preprocessed_{document._.column}',
-                            f'preprocessed_{summary._.column}',
-                        ]
-                    )
-                ])[0]
+            # NGramAlignerCap.decode(
+            #     example.data[
+            #         Identifier(NGramAlignerCap.__name__)(
+            #             columns=[
+            #                 f'preprocessed_{document._.column}',
+            #                 f'preprocessed_{summary._.column}',
+            #             ]
+            #         )
+            #     ])[0]
+
+            example.data[f'{NGramAligner.__class__.__name__}:{document._.column}:{summary._.column}']
             for summary in summaries
         ]
         lexical_alignments = [
@@ -267,17 +273,19 @@ def show_main(example):
     if semantic_sim_type == "Static embedding":
         try:
             semantic_alignments = [
-                StaticEmbeddingAlignerCap.decode(
-                    example.data[
-                        Identifier(StaticEmbeddingAlignerCap.__name__)(
-                            threshold=MIN_SEMANTIC_SIM_THRESHOLD,
-                            top_k=MAX_SEMANTIC_SIM_TOP_K,
-                            columns=[
-                                f'preprocessed_{document._.column}',
-                                f'preprocessed_{summary._.column}',
-                            ]
-                        )
-                    ])[0]
+                # StaticEmbeddingAlignerCap.decode(
+                #     example.data[
+                #         Identifier(StaticEmbeddingAlignerCap.__name__)(
+                #             threshold=MIN_SEMANTIC_SIM_THRESHOLD,
+                #             top_k=MAX_SEMANTIC_SIM_TOP_K,
+                #             columns=[
+                #                 f'preprocessed_{document._.column}',
+                #                 f'preprocessed_{summary._.column}',
+                #             ]
+                #         )
+                #     ])[0]
+
+                example.data[f'{StaticEmbeddingAligner.__class__.__name__}:{document._.column}:{summary._.column}']
                 for summary in summaries
             ]
         except KeyError:
@@ -295,17 +303,18 @@ def show_main(example):
     else:
         try:
             semantic_alignments = [
-                BertscoreAlignerCap.decode(
-                    example.data[
-                        Identifier(BertscoreAlignerCap.__name__)(
-                            threshold=MIN_SEMANTIC_SIM_THRESHOLD,
-                            top_k=MAX_SEMANTIC_SIM_TOP_K,
-                            columns=[
-                                f'preprocessed_{document._.column}',
-                                f'preprocessed_{summary._.column}',
-                            ]
-                        )
-                    ])[0]
+                # BertscoreAlignerCap.decode(
+                #     example.data[
+                #         Identifier(BertscoreAlignerCap.__name__)(
+                #             threshold=MIN_SEMANTIC_SIM_THRESHOLD,
+                #             top_k=MAX_SEMANTIC_SIM_TOP_K,
+                #             columns=[
+                #                 f'preprocessed_{document._.column}',
+                #                 f'preprocessed_{summary._.column}',
+                #             ]
+                #         )
+                #     ])[0]
+                example.data[f'{BertscoreAligner.__class__.__name__}:{document._.column}:{summary._.column}']
                 for summary in summaries
             ]
         except KeyError:
@@ -342,9 +351,9 @@ if __name__ == "__main__":
 
     nlp, is_lg = get_nlp()
 
-    Spacy.encode = _spacy_encode
-    Spacy.decode = _spacy_decode
-    rg_spacy = Spacy(nlp=nlp)
+    # Spacy.encode = _spacy_encode
+    # Spacy.decode = _spacy_decode
+    # rg_spacy = Spacy(nlp=nlp)
 
     path = Path(args.path)
     all_files = set(map(os.path.basename, path.glob('*')))

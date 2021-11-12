@@ -1,18 +1,12 @@
 import logging
 import os
 from argparse import ArgumentParser
-from ast import literal_eval
 from types import SimpleNamespace
 from typing import List
-
-from robustnessgym import Dataset, Spacy, CachedOperation
-from robustnessgym.core.constants import CACHEDOPS
-from robustnessgym.core.tools import strings_as_json
-from robustnessgym.logging.utils import set_logging_level
 from spacy import load
-from spacy.attrs import DEP, IS_ALPHA, IS_PUNCT, IS_STOP, LEMMA, LOWER, TAG, SENT_END, \
-    SENT_START, ORTH, POS, ENT_IOB
-from spacy.tokens import Doc
+
+from meerkat import DataPanel, SpacyColumn
+from meerkat.logging.utils import set_logging_level
 
 from align import BertscoreAligner, NGramAligner, StaticEmbeddingAligner
 from utils import clean_text
@@ -22,111 +16,9 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.CRITICAL)
 
 
-def _spacy_encode(self, x):
-    arr = x.to_array(
-        [DEP, IS_ALPHA, IS_PUNCT, IS_STOP, LEMMA, LOWER, TAG, SENT_END, SENT_START,
-         ORTH, POS, ENT_IOB])
-    return {
-        'arr': arr.flatten(),
-        'shape': list(arr.shape),
-        'words': [t.text for t in x]
-    }
-
-
-def _spacy_decode(self, x):
-    doc = Doc(self.nlp.vocab, words=x['words'])
-    return doc.from_array(
-        [DEP, IS_ALPHA, IS_PUNCT, IS_STOP, LEMMA, LOWER,
-         TAG, SENT_END, SENT_START, ORTH, POS, ENT_IOB],
-        x['arr'].reshape(x['shape'])
-    )
-
-
-Spacy.encode = _spacy_encode
-Spacy.decode = _spacy_decode
-
-
-class AlignerCap(CachedOperation):
-    def __init__(
-            self,
-            aligner,
-            spacy,
-            **kwargs,
-    ):
-        super(AlignerCap, self).__init__(**kwargs)
-        self.spacy = spacy
-        self.aligner = aligner
-
-    @classmethod
-    def encode(cls, x):
-        # Convert to built-in types from np.int / np.float
-        return super(AlignerCap, cls).encode([
-            {str(k): [(int(t[0]), float(t[1])) for t in v] for k, v in d.items()}
-            for d in x
-        ])
-
-    @classmethod
-    def decode(cls, x):
-        x = super(AlignerCap, cls).decode(x)
-        x = [{literal_eval(k): v for k, v in d.items()} for d in x]
-        return x
-
-    def apply(self, batch, columns, *args, **kwargs):
-        # Run the aligner on the first example of the batch
-        return [
-            self.aligner.align(
-                self.spacy.retrieve(batch, columns[0])[0],
-                [self.spacy.retrieve(batch, col)[0] for col in columns[1:]]
-                if len(columns) > 2 else
-                [self.spacy.retrieve(batch, columns[1])[0]],
-            )
-        ]
-
-
-class BertscoreAlignerCap(AlignerCap):
-    def __init__(
-            self,
-            threshold: float,
-            top_k: int,
-            spacy,
-    ):
-        super(BertscoreAlignerCap, self).__init__(
-            aligner=BertscoreAligner(threshold=threshold, top_k=top_k),
-            spacy=spacy,
-            threshold=threshold,
-            top_k=top_k,
-        )
-
-
-class NGramAlignerCap(AlignerCap):
-    def __init__(
-            self,
-            spacy,
-    ):
-        super(NGramAlignerCap, self).__init__(
-            aligner=NGramAligner(),
-            spacy=spacy
-        )
-
-
-class StaticEmbeddingAlignerCap(AlignerCap):
-    def __init__(
-            self,
-            threshold: float,
-            top_k: int,
-            spacy,
-    ):
-        super(StaticEmbeddingAlignerCap, self).__init__(
-            aligner=StaticEmbeddingAligner(threshold=threshold, top_k=top_k),
-            spacy=spacy,
-            threshold=threshold,
-            top_k=top_k,
-        )
-
-
 def _run_aligners(
-        dataset: Dataset,
-        aligners: List[CachedOperation],
+        dataset: DataPanel,
+        aligners: List[BertscoreAligner, NGramAligner, StaticEmbeddingAligner],
         doc_column: str,
         reference_column: str,
         summary_columns: List[str] = None,
@@ -142,21 +34,24 @@ def _run_aligners(
     for aligner in aligners:
 
         # Run the aligner on (document, summary) pairs
-
-        dataset = aligner(
-            dataset,
-            [doc_column] + to_columns,
-            # Must use `batch_size = 1`
-            batch_size=1,
+        dataset.update(
+            lambda x: {
+                f'{aligner.__class__.__name__}:{doc_column}:{to_columns}': aligner.align(
+                    x[f'spacy:{doc_column}'], 
+                    [x[f'spacy:{col}'] for col in to_columns],
+                ),
+            },
         )
 
         if reference_column is not None and len(summary_columns):
             # Run the aligner on (reference, summary) pairs
-            dataset = aligner(
-                dataset,
-                [reference_column] + summary_columns,
-                # Must use `batch_size = 1`
-                batch_size=1,
+            dataset.update(
+                lambda x: {
+                    f'{aligner.__class__.__name__}:{reference_column}:{summary_columns}': aligner.align(
+                        x[f'spacy:{reference_column}'], 
+                        [x[f'spacy:{col}'] for col in summary_columns],
+                    ),
+                },
             )
 
         if len(to_columns) > 1:
@@ -164,91 +59,54 @@ def _run_aligners(
             # off into (1 + |summary_columns|) total columns, one for each comparison
 
             # Retrieve the (document, summary) column
-            doc_summary_column = aligner.retrieve(
-                dataset[:],
-                [doc_column] + to_columns,
-            )[tuple([doc_column] + to_columns)]
+            doc_summary_column = dataset[f'{aligner.__class__.__name__}:{doc_column}:{to_columns}']
 
             for i, col in enumerate(to_columns):
                 # Add as a new column after encoding with the aligner's `encode` method
                 dataset.add_column(
-                    column=str(aligner.identifier(columns=[doc_column, col])),
-                    values=[aligner.encode([row[i]]) for row in doc_summary_column],
+                    column=f'{aligner.__class__.__name__}:{doc_column}:{col}',
+                    values=[[row[i]] for row in doc_summary_column],
                 )
 
             # Remove the (document, summary) column
-            dataset.remove_column(
-                str(
-                    aligner.identifier(
-                        columns=[doc_column] + to_columns
-                    )
-                )
-            )
-            del dataset.interactions[CACHEDOPS].history[
-                (
-                    aligner.identifier,
-                    strings_as_json(
-                        strings=[doc_column] + to_columns
-                    )
-                )
-            ]
+            dataset.remove_column(f'{aligner.__class__.__name__}:{doc_column}:{to_columns}')
 
         if reference_column is not None and len(summary_columns) > 1:
             # Instead of having one column for (reference, summary) comparisons, split
             # off into (|summary_columns|) total columns, one for each comparison
 
             # Retrieve the (reference, summary) column
-            reference_summary_column = aligner.retrieve(
-                dataset[:],
-                [reference_column] + summary_columns,
-            )[tuple([reference_column] + summary_columns)]
+            reference_summary_column = dataset[f'{aligner.__class__.__name__}:{reference_column}:{summary_columns}']
 
             for i, col in enumerate(summary_columns):
                 # Add as a new column
                 dataset.add_column(
-                    column=str(aligner.identifier(columns=[reference_column, col])),
-                    values=[
-                        aligner.encode([row[i]]) for row in reference_summary_column
-                    ]
+                    column=f'{aligner.__class__.__name__}:{reference_column}:{col}',
+                    values=[[row[i]] for row in reference_summary_column],
                 )
 
             # Remove the (reference, summary) column
-            dataset.remove_column(
-                str(
-                    aligner.identifier(
-                        columns=[reference_column] + summary_columns
-                    )
-                )
-            )
-            del dataset.interactions[CACHEDOPS].history[
-                (
-                    aligner.identifier,
-                    strings_as_json(
-                        strings=[reference_column] + summary_columns
-                    )
-                )
-            ]
+            dataset.remove_column(f'{aligner.__class__.__name__}:{reference_column}:{summary_columns}')
 
     return dataset
 
 
 def deanonymize_dataset(
-        rg_path: str,
-        standardized_dataset: Dataset,
+        dataset_path: str,
+        standardized_dataset: DataPanel,
         processed_dataset_path: str = None,
         n_samples: int = None,
-
 ):
     """Take an anonymized dataset and add back the original dataset columns."""
     assert processed_dataset_path is not None, \
         "Please specify a path to save the dataset."
 
     # Load the dataset
-    dataset = Dataset.load_from_disk(rg_path)
+    dataset = DataPanel.read(dataset_path)
 
     if n_samples:
-        dataset.set_visible_rows(list(range(n_samples)))
-        standardized_dataset.set_visible_rows(list(range(n_samples)))
+        dataset.head(n_samples)
+        standardized_dataset.head(n_samples)
 
     text_columns = []
 
@@ -276,22 +134,19 @@ def deanonymize_dataset(
         nlp = load('en_core_web_sm')
 
     nlp.add_pipe('sentencizer', before="parser")
-    spacy = Spacy(nlp=nlp)
-    dataset = spacy(
-        dataset,
-        [f'preprocessed_{col}' for col in text_columns],
-        batch_size=100,
-    )
+
+    for col in text_columns:
+        dataset.add_column(f'spacy:{col}', SpacyColumn.from_docs(nlp.pipe(dataset['preprocessed_{col}'])))
 
     # Directly save to disk
-    dataset.save_to_disk(processed_dataset_path)
+    dataset.write(processed_dataset_path)
 
     return dataset
 
 
 def run_workflow(
         jsonl_path: str = None,
-        dataset: Dataset = None,
+        dataset: DataPanel = None,
         doc_column: str = None,
         reference_column: str = None,
         summary_columns: List[str] = None,
@@ -310,13 +165,13 @@ def run_workflow(
 
     # Load the dataset
     if jsonl_path is not None:
-        dataset = Dataset.from_jsonl(jsonl_path)
+        dataset = DataPanel.from_jsonl(jsonl_path)
 
     if doc_column is None:
         # Assume `doc_column` is called "document"
         doc_column = 'document'
         assert doc_column in dataset.column_names, \
-            f"`doc_column={doc_column}` is not a column in dataset."
+            f"`doc_column={doc_column}` is not a column in datapanel."
         print("Assuming `doc_column` is called 'document'.")
 
     if reference_column is None:
@@ -333,14 +188,14 @@ def run_workflow(
         for col in dataset.column_names:
             if col.startswith("summary:") and col != "summary:reference":
                 summary_columns.append(col)
-        print(f"Reading summary columns from dataset. Found {summary_columns}.")
+        print(f"Reading summary columns from datapanel. Found {summary_columns}.")
 
     if len(summary_columns) == 0 and reference_column is None:
         raise ValueError("At least one summary is required")
 
-    # Set visible rows to restrict to the first `n_samples`
+    # Restrict to the first `n_samples`
     if n_samples:
-        dataset.set_visible_rows(list(range(n_samples)))
+        dataset.head(n_samples)
 
     # Combine the text columns into one list
     text_columns = [doc_column] + ([reference_column] if reference_column else []) + summary_columns
@@ -363,29 +218,23 @@ def run_workflow(
         raise OSError('Missing spaCy model "en_core_web_lg". Please run "python -m spacy download en_core_web_lg"')
 
     nlp.add_pipe('sentencizer', before="parser")
-    spacy = Spacy(nlp=nlp)
-    dataset = spacy(
-        dataset,
-        [f'preprocessed_{col}' for col in text_columns],
-        batch_size=100,
-    )
+
+    for col in text_columns:
+        dataset.add_column(f'spacy:{col}', SpacyColumn.from_docs(nlp.pipe(dataset['preprocessed_{col}'])))
+
 
     # Run the 3 align pipelines
-    bert_aligner = BertscoreAlignerCap(
-        threshold=bert_aligner_threshold,
+    bert_aligner = BertscoreAligner(
+        threshold=bert_aligner_threshold, 
         top_k=bert_aligner_top_k,
-        spacy=spacy,
     )
 
-    embedding_aligner = StaticEmbeddingAlignerCap(
-        threshold=embedding_aligner_threshold,
+    embedding_aligner = StaticEmbeddingAligner(
+        threshold=embedding_aligner_threshold, 
         top_k=embedding_aligner_top_k,
-        spacy=spacy,
     )
 
-    ngram_aligner = NGramAlignerCap(
-        spacy=spacy,
-    )
+    ngram_aligner = NGramAligner()
 
     dataset = _run_aligners(
         dataset=dataset,
@@ -402,16 +251,11 @@ def run_workflow(
             if col is not None:
                 dataset.remove_column(col)
                 dataset.remove_column(f'preprocessed_{col}')
-                dataset.remove_column(
-                    str(spacy.identifier(columns=[f'preprocessed_{col}']))
-                )
-                del dataset.interactions[CACHEDOPS].history[
-                    (spacy.identifier, f'preprocessed_{col}')
-                ]
-        dataset.save_to_disk(f'{processed_dataset_path}.anonymized')
+                dataset.remove_column(f'spacy:{col}')
+        dataset.write(f'{processed_dataset_path}.anonymized')
     else:
         # Directly save to disk
-        dataset.save_to_disk(processed_dataset_path)
+        dataset.write(processed_dataset_path)
 
     return dataset
 
@@ -469,7 +313,7 @@ def join_predictions(
 
     # Load the predictions
     predictions = [
-        Dataset.from_jsonl(json_path=prediction_jsonl)
+        DataPanel.from_jsonl(json_path=prediction_jsonl)
         for prediction_jsonl in prediction_jsonls
     ]
 
@@ -575,14 +419,14 @@ def get_dataset(
     if dataset_name is not None:
         return get_hf_dataset(dataset_name, dataset_version, dataset_split)
 
-    return Dataset.from_jsonl(json_path=dataset_jsonl)
+    return DataPanel.from_jsonl(json_path=dataset_jsonl)
 
 
 def get_hf_dataset(name: str, version: str = None, split: str = 'test'):
     """Get dataset from Huggingface."""
     if version:
-        return Dataset.load_dataset(name, version, split=split)
-    return Dataset.load_dataset(name, split=split)
+        return DataPanel.from_huggingface(name, version, split=split)
+    return DataPanel.from_huggingface(name, split=split)
 
 
 if __name__ == '__main__':
@@ -595,8 +439,8 @@ if __name__ == '__main__':
                         help="Huggingface dataset split.")
     parser.add_argument('--dataset_jsonl', type=str,
                         help="Path to a jsonl file for the dataset.")
-    parser.add_argument('--dataset_rg', type=str,
-                        help="Path to a dataset stored in the Robustness Gym format. "
+    parser.add_argument('--dataset_mk', type=str,
+                        help="Path to a dataset stored in the Meerkat format. "
                              "All processed datasets are stored in this format.")
     parser.add_argument('--prediction_jsonls', nargs='+', default=[],
                         help="Path to one or more jsonl files for the predictions.")
@@ -665,10 +509,10 @@ if __name__ == '__main__':
     if args.workflow:
         # Run the processing workflow
         dataset = None
-        # Check if `args.dataset_rg` was passed in
-        if args.dataset_rg:
+        # Check if `args.dataset_mk` was passed in
+        if args.dataset_mk:
             # Load the dataset directly
-            dataset = Dataset.load_from_disk(args.dataset_rg)
+            dataset = DataPanel.read(args.dataset_mk)
 
         run_workflow(
             jsonl_path=args.dataset_jsonl,
@@ -687,13 +531,13 @@ if __name__ == '__main__':
 
     if args.deanonymize:
         # Deanonymize an anonymized dataset
-        # Check if `args.dataset_rg` was passed in
-        assert args.dataset_rg is not None, \
-            "Must specify `dataset_rg` path to be deanonymized."
-        assert args.dataset_rg.endswith('anonymized'), \
-            "`dataset_rg` must end in 'anonymized'."
+        # Check if `args.dataset_mk` was passed in
+        assert args.dataset_mk is not None, \
+            "Must specify `dataset_mk` path to be deanonymized."
+        assert args.dataset_mk.endswith('anonymized'), \
+            "`dataset_mk` must end in 'anonymized'."
         assert (args.dataset is None) != (args.dataset_jsonl is None), \
-            "`dataset_rg` points to an anonymized dataset that will be " \
+            "`dataset_mk` points to an anonymized dataset that will be " \
             "deanonymized. Please pass in relevant arguments: either " \
             "`dataset`, `version` and `split` OR `dataset_jsonl`."
 
@@ -709,7 +553,7 @@ if __name__ == '__main__':
         )
         # Use it to deanonymize
         dataset = deanonymize_dataset(
-            rg_path=args.dataset_rg,
+            dataset_path=args.dataset_mk,
             standardized_dataset=standardized_dataset,
             processed_dataset_path=args.processed_dataset_path,
             n_samples=args.n_samples if not args.try_it else 10,
