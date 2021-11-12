@@ -44,11 +44,11 @@ def load_from_index(filename, index):
 
 
 @st.cache(allow_output_mutation=True)
-def load_dataset(path: str):
+def load_dataset(path: str, nlp: spacy.Language):
     if path.endswith('.jsonl'):
         return DataPanel.from_jsonl(path)
     try:
-        return DataPanel.read(path)
+        return DataPanel.read(path, nlp=nlp)
     except NotADirectoryError:
         return DataPanel.from_jsonl(path)
 
@@ -369,7 +369,7 @@ if __name__ == "__main__":
         file_index = 0
     col1, col2 = st.beta_columns((3, 1))
     filename = col1.selectbox(label="File:", options=files, index=file_index)
-    dataset = load_dataset(str(path / filename))
+    dataset = load_dataset(str(path / filename), nlp=nlp)
 
     dataset_size = len(dataset)
     query = col2.number_input(f"Index (Size: {dataset_size}):", value=0, min_value=0, max_value=dataset_size - 1)
