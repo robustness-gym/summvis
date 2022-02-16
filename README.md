@@ -66,23 +66,12 @@ The SummVis interface is shown below. The example displayed is the first record 
 Currently only English text is supported.
 
 ## Installation
-### Option 1: Conda (recommended)
-The following will create a conda environment named `summvis`
-```
-git clone https://github.com/robustness-gym/summvis.git
-cd summvis
-conda env create -f environment.yml
-conda activate summvis # OR "source activate summvis" on older conda versions
-```
-
-Installation takes around **2 minutes** on a Macbook Pro.
-
-### Option 2: Pip
 **IMPORTANT**: Please use `python>=3.8` since some dependencies require that for installation.
 ```shell
 # Requires python>=3.8
 git clone https://github.com/robustness-gym/summvis.git
 cd summvis
+# Following line necessary to get pip > 21.3
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
@@ -90,12 +79,7 @@ pip install -r requirements.txt
 ## Quickstart
 Start using SummVis immediately on a small sample from the [CNN / Daily Mail](https://huggingface.co/datasets/cnn_dailymail) validation set. 
 
-### 1. Activate conda environment (if [installed](#Installation) using conda)
-```
-conda activate summvis # OR "source activate summvis" on older conda versions
-```
-
-### 2. Cache the data  
+### 1. Cache the data  
 This may take **several minutes** if you haven't previously loaded CNN / DailyMail from 
 the Datasets library.
 ```shell
@@ -103,7 +87,7 @@ sh quickstart.sh
 ```
 This will create the file `data/cnn_dailymail_10.validation`, which contains the first 10 pre-cached examples from the CNN / Daily Mail validation set. For more details on the loading process, see [Running with pre-loaded datasets](#running-with-pre-loaded-datasets).
 
-### 3. Start the tool
+### 2. Start the tool
 ```shell
 streamlit run summvis.py
 ```
