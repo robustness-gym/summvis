@@ -77,6 +77,9 @@ pip install -r requirements.txt
 ```
 
 ## Quickstart
+
+⚠️ **UPDATE (3/14/2022)**: The CNN/Daily Mail Dataset upload (also used in quickstart.sh) may not work currently due to an issue with an external libary. We recommend you use XSum (see examples below) until this is resolved.
+
 Start using SummVis immediately on a small sample from the [CNN / Daily Mail](https://huggingface.co/datasets/cnn_dailymail) validation set. 
 
 ### 1. Cache the data  
@@ -95,6 +98,8 @@ The tool will automatically load the dataset created in the previous step. If yo
 will need to select the appropriate file from the dropdown in the upper-right corner of the interface.
 
 ## Running with pre-loaded datasets
+
+⚠️ **UPDATE (3/14/2022)**: The CNN/Daily Mail Dataset upload may not work currently due to an issue with an external libary. We recommend you use XSum (see examples below) until this is resolved.
 
 ### 1. Download one of the pre-loaded datasets:
 
