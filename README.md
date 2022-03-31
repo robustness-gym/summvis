@@ -2,16 +2,19 @@
 
 SummVis is an open-source visualization tool that supports fine-grained analysis of summarization models, data, and evaluation 
 metrics. Through its lexical and semantic visualizations, SummVis enables in-depth exploration across important dimensions such as factual consistency and abstractiveness.
- 
+
+Paper: [Summvis: Interactive Visual Analysis of Models, Data, and Evaluation for Text Summarization](https://arxiv.org/abs/2104.07605)
+
 Authors: [Jesse Vig](https://twitter.com/jesse_vig)<sup>1</sup>, 
 [Wojciech Kryściński](https://twitter.com/iam_wkr)<sup>1</sup>,
  [Karan Goel](https://twitter.com/krandiash)<sup>2</sup>,
   [Nazneen Fatema Rajani](https://twitter.com/nazneenrajani)<sup>1</sup><br/>
   <sup>1</sup>[Salesforce Research](https://einstein.ai/) <sup>2</sup>[Stanford Hazy Research](https://hazyresearch.stanford.edu/)
 
-📖 [Paper](https://arxiv.org/abs/2104.07605)
-🎥 [Demo](https://vimeo.com/540429745)
-
+<a href="https://vimeo.com/540429745">
+   <img src="website/video_thumbnail.png" width="400px" alt="Demo gif"/>
+</a>
+&nbsp;
 <p>
     <img src="website/demo.gif" alt="Demo gif"/>
 </p>
