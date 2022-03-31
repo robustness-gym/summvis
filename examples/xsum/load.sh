@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Make sure to first run: python -m spacy download en_core_web_lg
+
 # Dump one example from XSum validation split to .jsonl format. This may take several minutes if loading for first time.
 python ../../preprocessing.py \
 --standardize \

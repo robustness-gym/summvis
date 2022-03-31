@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Make sure to first run: python -m spacy download en_core_web_lg
+
 # Generate predictions from 4 models for wikinews.jsonl file
 python ../../generation.py --model pegasus-cnndm --data_path wikinews.jsonl &&
 python ../../generation.py --model pegasus-xsum --data_path wikinews.jsonl &&

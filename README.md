@@ -74,7 +74,7 @@ pip install -r requirements.txt
 
 ## Quickstart
 
-View an example from [WikiNews](examples/README.md):
+View an example from [WikiNews](examples/wikinews/README.md):
 
 ```shell
 streamlit run summvis.py -- --path examples/wikinews/wikinews.cache
@@ -119,9 +119,10 @@ python preprocessing.py \
 --dataset_jsonl path/to/my_dataset.jsonl \
 --processed_dataset_path path/to/my_cache_file
 ```
-    Additional options:   
-    &nbsp;&nbsp;`--n_samples <number_of_samples>`: Process the first `number_of_samples` samples only (recommended).   
-    &nbsp;&nbsp;`--no_clean`: Do not perform additional text cleaning that may remove newlines, etc.   
+
+Additional options:   
+    `--n_samples <number_of_samples>`: Process the first `number_of_samples` samples only (recommended).   
+    `--no_clean`: Do not perform additional text cleaning that may remove newlines, etc.   
 
 **4. Launch Streamlit app**
 
@@ -161,20 +162,20 @@ python preprocessing.py \
 python generation.py --model model_name --data_path path/to/jsonl_file
 ```
 
-This will generate a prediction file `<model_name>.<dataset_file_name>.predictions`
+This will generate a prediction file named `<model_name>.<dataset_file_name>.predictions`
 
 **3. Join one or more prediction files (from previous step) with original dataset**
 
 ```shell
 python join.py \
-  --data_path  path/to/jsonl_file \
+  --data_path path/to/jsonl_file \
   --generation_paths \
       path/to/prediction_file_1 \
       path/to/prediction_file_2 \
   --output_path path/to/save_jsonl_file
 ```
 
-Once you complete these steps, you may proceed with the [final steps](#if-you-have-already-generated summaries) to load your file into SummVis.
+Once you complete these steps, you may proceed with the [final steps](#if-you-have-already-generated-summaries) to load your file into SummVis.
 
 ## Deploying SummVis remotely
 
