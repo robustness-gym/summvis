@@ -16,15 +16,13 @@ Authors: [Jesse Vig](https://twitter.com/jesse_vig)<sup>1</sup>,
     <img src="website/demo.gif" alt="Demo gif"/>
 </p>
 
-_Note: SummVis is under active development, so expect continued updates in the coming weeks and months.
- Feel free to raise issues for questions, suggestions, requests or bug reports._
+_We welcome issues for questions, suggestions, requests or bug reports._
 
 ## Table of Contents
 - [User guide](#user-guide)
 - [Installation](#installation)
 - [Quickstart](#quickstart)
-- [Running with pre-loaded datasets](#running-with-pre-loaded-datasets)
-- [Get your data into SummVis](#get-your-data-into-summvis)
+- [Load data into SummVis](#loading-data-into-summvis)
 - [Deploying SummVis remotely](#deploying-summvis-remotely)
 - [Citation](#citation)
 - [Acknowledgements](#acknowledgements)
@@ -63,12 +61,10 @@ The SummVis interface is shown below. The example displayed is the first record 
 **Novel entities**: Entity words in the summary that do not appear in the document on the left.<br/>
 
 ### Limitations   
-Currently only English text is supported.
+Currently only English text is supported. Extremely long documents may render slowly in the tool.
 
 ## Installation
-**IMPORTANT**: Please use `python>=3.8` since some dependencies require that for installation.
 ```shell
-# Requires python>=3.8
 git clone https://github.com/robustness-gym/summvis.git
 cd summvis
 # Following line necessary to get pip > 21.3
@@ -78,130 +74,26 @@ pip install -r requirements.txt
 
 ## Quickstart
 
-⚠️ **UPDATE (3/14/2022)**: The CNN/Daily Mail Dataset upload (also used in quickstart.sh) may not work currently due to an issue with an external libary. We recommend you use XSum (see examples below) until this is resolved.
+View an example from [WikiNews](examples/README.md):
 
-Start using SummVis immediately on a small sample from the [CNN / Daily Mail](https://huggingface.co/datasets/cnn_dailymail) validation set. 
-
-### 1. Cache the data  
-This may take **several minutes** if you haven't previously loaded CNN / DailyMail from 
-the Datasets library.
 ```shell
-sh quickstart.sh
-```
-This will create the file `data/cnn_dailymail_10.validation`, which contains the first 10 pre-cached examples from the CNN / Daily Mail validation set. For more details on the loading process, see [Running with pre-loaded datasets](#running-with-pre-loaded-datasets).
-
-### 2. Start the tool
-```shell
-streamlit run summvis.py
-```
-The tool will automatically load the dataset created in the previous step. If you have other files in the `data` directory, you
-will need to select the appropriate file from the dropdown in the upper-right corner of the interface.
-
-## Running with pre-loaded datasets
-
-⚠️ **UPDATE (3/14/2022)**: The CNN/Daily Mail Dataset upload may not work currently due to an issue with an external libary. We recommend you use XSum (see examples below) until this is resolved.
-
-### 1. Download one of the pre-loaded datasets:
-
-Download our pre-cached dataset that contains predictions for state-of-the-art models such as PEGASUS and BART on 
-CNN / Daily Mail and XSum validation sets.
-
-##### CNN / Daily Mail (1000 examples from validation set): https://storage.googleapis.com/sfr-summvis-data-research/cnn_dailymail_1000.validation.anonymized.zip
-##### CNN / Daily Mail (full validation set): https://storage.googleapis.com/sfr-summvis-data-research/cnn_dailymail.validation.anonymized.zip
-##### XSum (1000 examples from validation set): https://storage.googleapis.com/sfr-summvis-data-research/xsum_1000.validation.anonymized.zip
-##### XSum (full validation set): https://storage.googleapis.com/sfr-summvis-data-research/xsum.validation.anonymized.zip
-
-We recommend that you choose the smallest dataset that fits your need in order to minimize download / preprocessing time.
-
-#### Example: Download and unzip CNN / Daily Mail (1000 example dataset)
-```shell
-mkdir data
-mkdir preprocessing
-curl https://storage.googleapis.com/sfr-summvis-data-research/cnn_dailymail_1000.validation.anonymized.zip --output preprocessing/cnn_dailymail_1000.validation.anonymized.zip
-unzip preprocessing/cnn_dailymail_1000.validation.anonymized.zip -d preprocessing/
-``` 
-
-#### Example: Download and unzip XSum (1000 example dataset)
-```shell
-mkdir data
-mkdir preprocessing
-curl https://storage.googleapis.com/sfr-summvis-data-research/xsum_1000.validation.anonymized.zip --output preprocessing/xsum_1000.validation.anonymized.zip
-unzip preprocessing/xsum_1000.validation.anonymized.zip -d preprocessing/
-``` 
-
-### 2. Deanonymize *n* examples:
-
-Next, we'll need to add the original examples from the CNN / Daily Mail or XSum datasets to deanonymize the data (this information 
-is omitted for copyright reasons). The `preprocessing.py` script can be used for this with the `--deanonymize` flag.
-
-Set the `--n_samples` argument and name the `--processed_dataset_path` output file accordingly.
-
-#### Example: Deanonymize 100 examples from CNN / Daily Mail:
-```shell
-python preprocessing.py \
---deanonymize \
---dataset_rg preprocessing/cnn_dailymail_1000.validation.anonymized \
---dataset cnn_dailymail \
---version 3.0.0 \
---split validation \
---processed_dataset_path data/cnn_dailymail_100.validation \
---n_samples 100
+streamlit run summvis.py -- --path examples/wikinews/wikinews.cache
 ```
 
-#### Example: Deanonymize all pre-loaded examples from CNN / Daily Mail (1000 examples dataset):
-```shell
-python preprocessing.py \
---deanonymize \
---dataset_rg preprocessing/cnn_dailymail_1000.validation.anonymized \
---dataset cnn_dailymail \
---version 3.0.0 \
---split validation \
---processed_dataset_path data/cnn_dailymail_1000.validation \
---n_samples 1000
-```
 
-#### Example: Deanonymize all pre-loaded examples from CNN / Daily Mail (full dataset):
-```shell
-python preprocessing.py \
---deanonymize \
---dataset_rg preprocessing/cnn_dailymail.validation.anonymized \
---dataset cnn_dailymail \
---version 3.0.0 \
---split validation \
---processed_dataset_path data/cnn_dailymail.validation
-```
+## Loading data into SummVis
 
-#### Example: Deanonymize all pre-loaded examples from XSum (1000 examples dataset):
-```shell
-python preprocessing.py \
---deanonymize \
---dataset_rg preprocessing/xsum_1000.validation.anonymized \
---dataset xsum \
---split validation \
---processed_dataset_path data/xsum_1000.validation \
---n_samples 1000
-```
+### If you have already generated summaries:
 
-### 3. Run SummVis
-Once the app loads, make sure it's pointing to the right `File` at the top
-of the interface.
-```shell
-streamlit run summvis.py
-```
-Alternatively, you may point SummVis to a folder where your data is stored:
-```shell
-streamlit run summvis.py -- --path your/path/to/data
-```
-You may further specify the filename within the folder:
-```shell
-streamlit run summvis.py -- --path your/path/to/data --file filename
-```
-Note that the additional `--` is not a mistake, and is required to pass command-line arguments in streamlit.
+The following steps describe how to load source documents and associated precomputed summaries into the SummVis tool.
 
+**1. Download spaCy model**
+```
+python -m spacy download en_core_web_lg
+```
+This may take several minutes.
 
-## Get your data into SummVis
-
-The simplest way to use SummVis with your own data is to create a jsonl file of the following format:
+**2. Create .jsonl file with the source document, reference summary and/or generated summaries in the following format:** 
 
 ```
 {"document":  "This is the first source document", "summary:reference": "This is the reference summary", "summary:testmodel1": "This is the summary for testmodel1", "summary:testmodel2": "This is the summary for testmodel2"}
@@ -209,145 +101,80 @@ The simplest way to use SummVis with your own data is to create a jsonl file of 
 ```
 
 The key for the reference summary must equal `summary:reference` and the key for any other summary must be of the form
-`summary:<summary_name>`, e.g. `summary:BART`. The document and at least one summary (reference, other, or both) are required.
+`summary:<name>`, e.g. `summary:BART`. The document and at least one summary (reference, other, or both) are required.
 
-**NOTE**: SummVis is optimized for documents that are approximately the length of a news article. Documents that are 
-significantly longer than this may render slower in the tool, especially if many summaries are displayed.
+We also provide [scripts to generate summaries](#if-you-do-not-have-generated-summaries) if you haven't done so already.
 
-The following additional install step is required.:
-```
-python -m spacy download en_core_web_lg
-```
- 
-You have two options to load this jsonl file into the tool:
+**3. Preprocess .jsonl file**
 
-#### Option 1: Load the jsonl file directly
-
-This is the simplest approach for loading your data into SummVis. The disadvantage of this approach is that all computations are performed in real-time, which is particularly expensive for 
-the semantic similarity computation. As a result, each example will be slow to load (~5-15 seconds on a Macbook Pro).
-
-1. Place the jsonl file in the `data` directory. Note that the file must be named with a `.jsonl` extension.
-2. Start SummVis: `streamlit run summvis.py` 
-3. Select your jsonl file from the `File` dropdown at the top of the interface.
-
-Note: To avoid additional text cleaning that may remove newlines, etc., use `streamlit run summvis.py -- --no_clean`
-
-#### Option 2: Preprocess jsonl file (recommended)
-
-You may run `preprocessing.py` to precompute all data required in the interface (running `spaCy`, lexical and semantic
- aligners) and save a cache file, which can be read directly into the tool. Note that this script may run for a while
+Run `preprocessing.py` to precompute all data required in the interface (running `spaCy`, lexical and semantic
+ aligners) and save a cache file, which can be read directly into the tool. Note that this script may take some time to run
   (~5-15 seconds per example on a MacBook Pro for
- documents of typical length found in CNN/DailyMail or XSum), and will be greatly expedited by running on a GPU.
+ documents of typical length found in CNN/DailyMail or XSum), so you may want to start with a small subset of your dataset
+using the `--n_samples` argument (below). This will also be expedited by running on a GPU.
 
-1. Run preprocessing script to generate cache file
-    ```shell
-    python preprocessing.py \
-    --workflow \
-    --dataset_jsonl path/to/my_dataset.jsonl \
-    --processed_dataset_path path/to/my_cache_file
-    ```
+```shell
+python preprocessing.py \
+--workflow \
+--dataset_jsonl path/to/my_dataset.jsonl \
+--processed_dataset_path path/to/my_cache_file
+```
     Additional options:   
     &nbsp;&nbsp;`--n_samples <number_of_samples>`: Process the first `number_of_samples` samples only (recommended).   
     &nbsp;&nbsp;`--no_clean`: Do not perform additional text cleaning that may remove newlines, etc.   
 
-2. Copy output cache file to the `data` directory
-3. Start SummVis: `streamlit run summvis.py`   
-4. Select your file from the `File` dropdown at the top of the interface.
+**4. Launch Streamlit app**
 
-As an alternative to steps 2-4, you may point SummVis directly to the cache file:
 ```shell
-streamlit run summvis.py -- --path <parent_directory_of_cache_file> --file <cache_filename>
+streamlit run summvis.py -- --path path/to/my_cache_file_or_parent_directory
 ```
 
+Note that the additional `--` is not a mistake, and is required to pass command-line arguments in Streamlit.
 
-### Generating predictions
-The instructions in the previous section assume access to model predictions. We also provide tools to load predictions,
- either by downloading datasets with precomputed predictions or running
-a script to generate predictions for HuggingFace-compatible models. In this section we describe an end-to-end pipeline 
-for using these tools. 
+### If you do NOT have generated summaries:
 
+Before running the steps above, you may run the additional steps below to generate summaries. You may also refer to the [sample
+end-to-end loading scripts](examples/)  for [WikiNews](examples/wikinews/load.sh) (loaded from .jsonl file) and [XSum](examples/xsum/load.sh)
+(loaded from HuggingFace Datasets).
 
-Prior to running the following, an additional install step is required:
+**1. Create file with the source documents and optional reference summaries in the following format:**
 
 ```
-python -m spacy download en_core_web_lg
-```
-
-#### 1. Standardize and save dataset to disk.
-Loads in a dataset from HF, or any dataset that you have and stores it in a 
-standardized format with columns for `document` and `summary:reference`.  
-
-##### Example: Save CNN / Daily Mail validation split to disk as a jsonl file.
-```shell
-python preprocessing.py \
---standardize \
---dataset cnn_dailymail \
---version 3.0.0 \
---split validation \
---save_jsonl_path preprocessing/cnn_dailymail.validation.jsonl
-```
-
-##### Example: Load custom `my_dataset.jsonl`, standardize, and save.
-```shell
-python preprocessing.py \
---standardize \
---dataset_jsonl path/to/my_dataset.jsonl \
---save_jsonl_path preprocessing/my_dataset.jsonl
-```
-
-Expected format of `my_dataset.jsonl`:
- ```
 {"document":  "This is the first source document", "summary:reference": "This is the reference summary"}
 {"document":  "This is the second source document", "summary:reference": "This is the reference summary"}
 ```
 
-If you wish to use column names other than `document` and `summary:reference`, you may specify custom column names
-using the `doc_column` and `reference_column` command-line arguments.
+You may create a .jsonl format directly from a Huggingface dataset by running `preprocessing.py` with the `--standardize` flag:
 
-
-#### 2. Add predictions to the saved dataset.
-Takes a saved dataset that has already been standardized and adds predictions to it 
-from prediction jsonl files. Cached predictions for several models available here:
- https://storage.googleapis.com/sfr-summvis-data-research/predictions.zip
- 
-You may also generate your own predictions using this [this script](generation.py). 
-
-##### Example: Add 6 prediction files for PEGASUS and BART to the dataset.
 ```shell
 python preprocessing.py \
---join_predictions \
---dataset_jsonl preprocessing/cnn_dailymail.validation.jsonl \
---prediction_jsonls \
-predictions/bart-cnndm.cnndm.validation.results.anonymized \
-predictions/bart-xsum.cnndm.validation.results.anonymized \
-predictions/pegasus-cnndm.cnndm.validation.results.anonymized \
-predictions/pegasus-multinews.cnndm.validation.results.anonymized \
-predictions/pegasus-newsroom.cnndm.validation.results.anonymized \
-predictions/pegasus-xsum.cnndm.validation.results.anonymized \
---save_jsonl_path preprocessing/cnn_dailymail.validation.jsonl
+--standardize \
+--dataset hf_dataset_name \
+--version hf_dataset_version (optional) \
+--split hf_dataset_split \
+--save_jsonl_path path/to/save_jsonl_file
 ```
 
-#### 3. Run the preprocessing workflow and save the dataset.
-Takes a saved dataset that has been standardized, and predictions already added. 
-Applies all the preprocessing steps to it (running `spaCy`, lexical and semantic aligners), 
-and stores the processed dataset back to disk.
+**2. Generate predictions**
 
-##### Example: Autorun with default settings on a few examples to try it.
 ```shell
-python preprocessing.py \
---workflow \
---dataset_jsonl preprocessing/cnn_dailymail.validation.jsonl \
---processed_dataset_path data/cnn_dailymail.validation \
---try_it
+python generation.py --model model_name --data_path path/to/jsonl_file
 ```
 
-##### Example: Autorun with default settings on all examples.
+This will generate a prediction file `<model_name>.<dataset_file_name>.predictions`
+
+**3. Join one or more prediction files (from previous step) with original dataset**
+
 ```shell
-python preprocessing.py \
---workflow \
---dataset_jsonl preprocessing/cnn_dailymail.validation.jsonl \
---processed_dataset_path data/cnn_dailymail
+python join.py \
+  --data_path  path/to/jsonl_file \
+  --generation_paths \
+      path/to/prediction_file_1 \
+      path/to/prediction_file_2 \
+  --output_path path/to/save_jsonl_file
 ```
+
+Once you complete these steps, you may proceed with the [final steps](#if-you-have-already-generated summaries) to load your file into SummVis.
 
 ## Deploying SummVis remotely
 

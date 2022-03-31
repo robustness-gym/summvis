@@ -1,0 +1,48 @@
+column_dtypes:
+  BertscoreAligner:spacy:document:spacy:summary:bart-cnndm: &id001 !!python/name:meerkat.columns.list_column.ListColumn ''
+  BertscoreAligner:spacy:document:spacy:summary:bart-xsum: *id001
+  BertscoreAligner:spacy:document:spacy:summary:pegasus-cnndm: *id001
+  BertscoreAligner:spacy:document:spacy:summary:pegasus-xsum: *id001
+  BertscoreAligner:spacy:document:spacy:summary:reference: *id001
+  BertscoreAligner:spacy:summary:reference:spacy:summary:bart-cnndm: *id001
+  BertscoreAligner:spacy:summary:reference:spacy:summary:bart-xsum: *id001
+  BertscoreAligner:spacy:summary:reference:spacy:summary:pegasus-cnndm: *id001
+  BertscoreAligner:spacy:summary:reference:spacy:summary:pegasus-xsum: *id001
+  NGramAligner:spacy:document:spacy:summary:bart-cnndm: *id001
+  NGramAligner:spacy:document:spacy:summary:bart-xsum: *id001
+  NGramAligner:spacy:document:spacy:summary:pegasus-cnndm: *id001
+  NGramAligner:spacy:document:spacy:summary:pegasus-xsum: *id001
+  NGramAligner:spacy:document:spacy:summary:reference: *id001
+  NGramAligner:spacy:summary:reference:spacy:summary:bart-cnndm: *id001
+  NGramAligner:spacy:summary:reference:spacy:summary:bart-xsum: *id001
+  NGramAligner:spacy:summary:reference:spacy:summary:pegasus-cnndm: *id001
+  NGramAligner:spacy:summary:reference:spacy:summary:pegasus-xsum: *id001
+  StaticEmbeddingAligner:spacy:document:spacy:summary:bart-cnndm: *id001
+  StaticEmbeddingAligner:spacy:document:spacy:summary:bart-xsum: *id001
+  StaticEmbeddingAligner:spacy:document:spacy:summary:pegasus-cnndm: *id001
+  StaticEmbeddingAligner:spacy:document:spacy:summary:pegasus-xsum: *id001
+  StaticEmbeddingAligner:spacy:document:spacy:summary:reference: *id001
+  StaticEmbeddingAligner:spacy:summary:reference:spacy:summary:bart-cnndm: *id001
+  StaticEmbeddingAligner:spacy:summary:reference:spacy:summary:bart-xsum: *id001
+  StaticEmbeddingAligner:spacy:summary:reference:spacy:summary:pegasus-cnndm: *id001
+  StaticEmbeddingAligner:spacy:summary:reference:spacy:summary:pegasus-xsum: *id001
+  document: &id002 !!python/name:meerkat.columns.pandas_column.PandasSeriesColumn ''
+  preprocessed_document: *id002
+  preprocessed_summary:bart-cnndm: *id002
+  preprocessed_summary:bart-xsum: *id002
+  preprocessed_summary:pegasus-cnndm: *id002
+  preprocessed_summary:pegasus-xsum: *id002
+  preprocessed_summary:reference: *id002
+  spacy:document: &id003 !!python/name:meerkat.columns.spacy_column.SpacyColumn ''
+  spacy:summary:bart-cnndm: *id003
+  spacy:summary:bart-xsum: *id003
+  spacy:summary:pegasus-cnndm: *id003
+  spacy:summary:pegasus-xsum: *id003
+  spacy:summary:reference: *id003
+  summary:bart-cnndm: *id002
+  summary:bart-xsum: *id002
+  summary:pegasus-cnndm: *id002
+  summary:pegasus-xsum: *id002
+  summary:reference: *id002
+dtype: !!python/name:meerkat.datapanel.DataPanel ''
+len: 1

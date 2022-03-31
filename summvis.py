@@ -6,16 +6,13 @@ import re
 from pathlib import Path
 
 import spacy
+import spacy.lang.en
 import streamlit as st
-from robustnessgym import Dataset, Identifier
-from robustnessgym import Spacy
+from meerkat import DataPanel
 from spacy.tokens import Doc
 
 from align import NGramAligner, BertscoreAligner, StaticEmbeddingAligner
 from components import MainView
-from preprocessing import NGramAlignerCap, StaticEmbeddingAlignerCap, \
-    BertscoreAlignerCap
-from preprocessing import _spacy_decode, _spacy_encode
 from utils import clean_text
 
 MIN_SEMANTIC_SIM_THRESHOLD = 0.1
@@ -42,14 +39,18 @@ def load_from_index(filename, index):
                 return json.loads(line.strip())
 
 
-@st.cache(allow_output_mutation=True)
-def load_dataset(path: str):
+def _nlp_key(x: spacy.Language):
+    return str(x.path)
+
+
+@st.cache(allow_output_mutation=True, hash_funcs={spacy.lang.en.English: _nlp_key})
+def load_dataset(path: str, nlp: spacy.Language):
     if path.endswith('.jsonl'):
-        return Dataset.from_jsonl(path)
+        return DataPanel.from_jsonl(path)
     try:
-        return Dataset.load_from_disk(path)
+        return DataPanel.read(path, nlp=nlp)
     except NotADirectoryError:
-        return Dataset.from_jsonl(path)
+        return DataPanel.from_jsonl(path)
 
 
 @st.cache(allow_output_mutation=True)
@@ -81,9 +82,7 @@ def retrieve(dataset, index, filename=None):
     id_ = data.get('id', '')
 
     try:
-        document = rg_spacy.decode(
-            data[rg_spacy.identifier(columns=['preprocessed_document'])]
-        )
+        document = data['spacy:document']
     except KeyError:
         if not is_lg:
             st.error("'en_core_web_lg model' is required unless loading from cached file."
@@ -100,9 +99,8 @@ def retrieve(dataset, index, filename=None):
     document._.column = "document"
 
     try:
-        reference = rg_spacy.decode(
-            data[rg_spacy.identifier(columns=['preprocessed_summary:reference'])]
-        )
+        reference = data['spacy:summary:reference']
+
     except KeyError:
         if not is_lg:
             st.error("'en_core_web_lg model' is required unless loading from cached file."
@@ -130,9 +128,7 @@ def retrieve(dataset, index, filename=None):
     preds = []
     for model_name in model_names:
         try:
-            pred = rg_spacy.decode(
-                data[rg_spacy.identifier(columns=[f"preprocessed_summary:{model_name}"])]
-            )
+            pred = data[f"spacy:summary:{model_name}"]
         except KeyError:
             if not is_lg:
                 st.error("'en_core_web_lg model' is required unless loading from cached file."
@@ -245,21 +241,8 @@ def show_main(example):
     # Gather data
     try:
         lexical_alignments = [
-            NGramAlignerCap.decode(
-                example.data[
-                    Identifier(NGramAlignerCap.__name__)(
-                        columns=[
-                            f'preprocessed_{document._.column}',
-                            f'preprocessed_{summary._.column}',
-                        ]
-                    )
-                ])[0]
+            example.data[f'{NGramAligner.__name__}:spacy:{document._.column}:spacy:{summary._.column}']
             for summary in summaries
-        ]
-        lexical_alignments = [
-            {k: [(pair[0], int(pair[1])) for pair in v]
-             for k, v in d.items()}
-            for d in lexical_alignments
         ]
     except KeyError:
         lexical_alignments = NGramAligner().align(document, summaries)
@@ -267,17 +250,7 @@ def show_main(example):
     if semantic_sim_type == "Static embedding":
         try:
             semantic_alignments = [
-                StaticEmbeddingAlignerCap.decode(
-                    example.data[
-                        Identifier(StaticEmbeddingAlignerCap.__name__)(
-                            threshold=MIN_SEMANTIC_SIM_THRESHOLD,
-                            top_k=MAX_SEMANTIC_SIM_TOP_K,
-                            columns=[
-                                f'preprocessed_{document._.column}',
-                                f'preprocessed_{summary._.column}',
-                            ]
-                        )
-                    ])[0]
+                example.data[f'{StaticEmbeddingAligner.__name__}:spacy:{document._.column}:spacy:{summary._.column}']
                 for summary in summaries
             ]
         except KeyError:
@@ -287,37 +260,17 @@ def show_main(example):
                 document,
                 summaries
             )
-        else:
-            semantic_alignments = [
-                filter_alignment(alignment, semantic_sim_threshold, semantic_sim_top_k)
-                for alignment in semantic_alignments
-            ]
     else:
         try:
             semantic_alignments = [
-                BertscoreAlignerCap.decode(
-                    example.data[
-                        Identifier(BertscoreAlignerCap.__name__)(
-                            threshold=MIN_SEMANTIC_SIM_THRESHOLD,
-                            top_k=MAX_SEMANTIC_SIM_TOP_K,
-                            columns=[
-                                f'preprocessed_{document._.column}',
-                                f'preprocessed_{summary._.column}',
-                            ]
-                        )
-                    ])[0]
+                example.data[f'{BertscoreAligner.__name__}:spacy:{document._.column}:spacy:{summary._.column}']
                 for summary in summaries
             ]
         except KeyError:
             semantic_alignments = BertscoreAligner(semantic_sim_threshold,
                                                    semantic_sim_top_k).align(document,
                                                                              summaries)
-        else:
-            semantic_alignments = [
-                filter_alignment(alignment, semantic_sim_threshold, semantic_sim_top_k)
-                for alignment in semantic_alignments
-            ]
-    
+
     MainView(
         document,
         summaries,
@@ -335,32 +288,28 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--path', type=str, default='data')
-    parser.add_argument('--file', type=str)
     parser.add_argument('--no_clean', action='store_true', default=False,
                         help="Do not clean text (remove extraneous spaces, newlines).")
     args = parser.parse_args()
 
     nlp, is_lg = get_nlp()
 
-    Spacy.encode = _spacy_encode
-    Spacy.decode = _spacy_decode
-    rg_spacy = Spacy(nlp=nlp)
-
     path = Path(args.path)
-    all_files = set(map(os.path.basename, path.glob('*')))
+    path_dir = path.parent
+    all_files = set(map(os.path.basename, path_dir.glob('*')))
     files = sorted([
         fname for fname in all_files if not (fname.endswith(".py") or fname.startswith("."))
     ])
-    if args.file:
+    if path.is_file:
         try:
-            file_index = files.index(args.file)
+            file_index = files.index(path.name)
         except:
-            raise FileNotFoundError(f"File not found: {args.file}")
+            raise FileNotFoundError(f"File not found: {path.name}")
     else:
         file_index = 0
     col1, col2 = st.beta_columns((3, 1))
     filename = col1.selectbox(label="File:", options=files, index=file_index)
-    dataset = load_dataset(str(path / filename))
+    dataset = load_dataset(str(path_dir / filename), nlp=nlp)
 
     dataset_size = len(dataset)
     query = col2.number_input(f"Index (Size: {dataset_size}):", value=0, min_value=0, max_value=dataset_size - 1)

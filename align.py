@@ -5,6 +5,7 @@ from collections import defaultdict
 from operator import itemgetter
 from typing import List, Dict, Tuple
 from typing import Sequence
+from abc import ABC
 
 import numpy as np
 import torch
@@ -76,7 +77,22 @@ class StaticEmbedding(EmbeddingModel):
         ]
 
 
-class EmbeddingAligner():
+class Aligner(ABC):
+    @abstractmethod
+    def align(
+        self,
+        source: Doc,
+        targets: Sequence[Doc]
+    ) -> List[Dict]:
+        """Compute alignment from summary tokens to doc tokens
+        Args:
+            source: Source spaCy document
+            targets: Target spaCy documents
+        Returns: List of alignments, one for each target document"""
+        pass
+
+
+class EmbeddingAligner(Aligner):
 
     def __init__(
         self,
@@ -169,7 +185,7 @@ class StaticEmbeddingAligner(EmbeddingAligner):
         )
 
 
-class NGramAligner():
+class NGramAligner(Aligner):
 
     def __init__(self):
         self.stemmer = PorterStemmer()

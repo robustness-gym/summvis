@@ -1,0 +1,5 @@
+dtype: !!python/name:meerkat.columns.spacy_column.SpacyColumn ''
+len: 1
+state:
+  _collate_fn: !!python/name:meerkat.mixins.collate.identity_collate ''
+  _formatter: !!python/name:meerkat.display.auto_formatter ''

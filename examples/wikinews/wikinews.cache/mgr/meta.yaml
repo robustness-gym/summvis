@@ -1,0 +1,231 @@
+_column_order:
+- summary:reference
+- document
+- summary:pegasus-cnndm
+- summary:pegasus-xsum
+- summary:bart-cnndm
+- summary:bart-xsum
+- preprocessed_document
+- preprocessed_summary:reference
+- preprocessed_summary:pegasus-cnndm
+- preprocessed_summary:pegasus-xsum
+- preprocessed_summary:bart-cnndm
+- preprocessed_summary:bart-xsum
+- spacy:document
+- spacy:summary:reference
+- spacy:summary:pegasus-cnndm
+- spacy:summary:pegasus-xsum
+- spacy:summary:bart-cnndm
+- spacy:summary:bart-xsum
+- BertscoreAligner:spacy:document:spacy:summary:reference
+- BertscoreAligner:spacy:document:spacy:summary:pegasus-cnndm
+- BertscoreAligner:spacy:document:spacy:summary:pegasus-xsum
+- BertscoreAligner:spacy:document:spacy:summary:bart-cnndm
+- BertscoreAligner:spacy:document:spacy:summary:bart-xsum
+- BertscoreAligner:spacy:summary:reference:spacy:summary:pegasus-cnndm
+- BertscoreAligner:spacy:summary:reference:spacy:summary:pegasus-xsum
+- BertscoreAligner:spacy:summary:reference:spacy:summary:bart-cnndm
+- BertscoreAligner:spacy:summary:reference:spacy:summary:bart-xsum
+- StaticEmbeddingAligner:spacy:document:spacy:summary:reference
+- StaticEmbeddingAligner:spacy:document:spacy:summary:pegasus-cnndm
+- StaticEmbeddingAligner:spacy:document:spacy:summary:pegasus-xsum
+- StaticEmbeddingAligner:spacy:document:spacy:summary:bart-cnndm
+- StaticEmbeddingAligner:spacy:document:spacy:summary:bart-xsum
+- StaticEmbeddingAligner:spacy:summary:reference:spacy:summary:pegasus-cnndm
+- StaticEmbeddingAligner:spacy:summary:reference:spacy:summary:pegasus-xsum
+- StaticEmbeddingAligner:spacy:summary:reference:spacy:summary:bart-cnndm
+- StaticEmbeddingAligner:spacy:summary:reference:spacy:summary:bart-xsum
+- NGramAligner:spacy:document:spacy:summary:reference
+- NGramAligner:spacy:document:spacy:summary:pegasus-cnndm
+- NGramAligner:spacy:document:spacy:summary:pegasus-xsum
+- NGramAligner:spacy:document:spacy:summary:bart-cnndm
+- NGramAligner:spacy:document:spacy:summary:bart-xsum
+- NGramAligner:spacy:summary:reference:spacy:summary:pegasus-cnndm
+- NGramAligner:spacy:summary:reference:spacy:summary:pegasus-xsum
+- NGramAligner:spacy:summary:reference:spacy:summary:bart-cnndm
+- NGramAligner:spacy:summary:reference:spacy:summary:bart-xsum
+columns:
+  BertscoreAligner:spacy:document:spacy:summary:bart-cnndm:
+    dtype: &id001 !!python/name:meerkat.columns.list_column.ListColumn ''
+    len: 1
+  BertscoreAligner:spacy:document:spacy:summary:bart-xsum:
+    dtype: *id001
+    len: 1
+  BertscoreAligner:spacy:document:spacy:summary:pegasus-cnndm:
+    dtype: *id001
+    len: 1
+  BertscoreAligner:spacy:document:spacy:summary:pegasus-xsum:
+    dtype: *id001
+    len: 1
+  BertscoreAligner:spacy:document:spacy:summary:reference:
+    dtype: *id001
+    len: 1
+  BertscoreAligner:spacy:summary:reference:spacy:summary:bart-cnndm:
+    dtype: *id001
+    len: 1
+  BertscoreAligner:spacy:summary:reference:spacy:summary:bart-xsum:
+    dtype: *id001
+    len: 1
+  BertscoreAligner:spacy:summary:reference:spacy:summary:pegasus-cnndm:
+    dtype: *id001
+    len: 1
+  BertscoreAligner:spacy:summary:reference:spacy:summary:pegasus-xsum:
+    dtype: *id001
+    len: 1
+  NGramAligner:spacy:document:spacy:summary:bart-cnndm:
+    dtype: *id001
+    len: 1
+  NGramAligner:spacy:document:spacy:summary:bart-xsum:
+    dtype: *id001
+    len: 1
+  NGramAligner:spacy:document:spacy:summary:pegasus-cnndm:
+    dtype: *id001
+    len: 1
+  NGramAligner:spacy:document:spacy:summary:pegasus-xsum:
+    dtype: *id001
+    len: 1
+  NGramAligner:spacy:document:spacy:summary:reference:
+    dtype: *id001
+    len: 1
+  NGramAligner:spacy:summary:reference:spacy:summary:bart-cnndm:
+    dtype: *id001
+    len: 1
+  NGramAligner:spacy:summary:reference:spacy:summary:bart-xsum:
+    dtype: *id001
+    len: 1
+  NGramAligner:spacy:summary:reference:spacy:summary:pegasus-cnndm:
+    dtype: *id001
+    len: 1
+  NGramAligner:spacy:summary:reference:spacy:summary:pegasus-xsum:
+    dtype: *id001
+    len: 1
+  StaticEmbeddingAligner:spacy:document:spacy:summary:bart-cnndm:
+    dtype: *id001
+    len: 1
+  StaticEmbeddingAligner:spacy:document:spacy:summary:bart-xsum:
+    dtype: *id001
+    len: 1
+  StaticEmbeddingAligner:spacy:document:spacy:summary:pegasus-cnndm:
+    dtype: *id001
+    len: 1
+  StaticEmbeddingAligner:spacy:document:spacy:summary:pegasus-xsum:
+    dtype: *id001
+    len: 1
+  StaticEmbeddingAligner:spacy:document:spacy:summary:reference:
+    dtype: *id001
+    len: 1
+  StaticEmbeddingAligner:spacy:summary:reference:spacy:summary:bart-cnndm:
+    dtype: *id001
+    len: 1
+  StaticEmbeddingAligner:spacy:summary:reference:spacy:summary:bart-xsum:
+    dtype: *id001
+    len: 1
+  StaticEmbeddingAligner:spacy:summary:reference:spacy:summary:pegasus-cnndm:
+    dtype: *id001
+    len: 1
+  StaticEmbeddingAligner:spacy:summary:reference:spacy:summary:pegasus-xsum:
+    dtype: *id001
+    len: 1
+  document:
+    block:
+      block_dir: blocks/140645734304016
+      block_index: document
+      mmap: false
+    dtype: &id002 !!python/name:meerkat.columns.pandas_column.PandasSeriesColumn ''
+    len: 1
+  preprocessed_document:
+    block:
+      block_dir: blocks/140645734304016
+      block_index: preprocessed_document
+      mmap: false
+    dtype: *id002
+    len: 1
+  preprocessed_summary:bart-cnndm:
+    block:
+      block_dir: blocks/140645734304016
+      block_index: preprocessed_summary:bart-cnndm
+      mmap: false
+    dtype: *id002
+    len: 1
+  preprocessed_summary:bart-xsum:
+    block:
+      block_dir: blocks/140645734304016
+      block_index: preprocessed_summary:bart-xsum
+      mmap: false
+    dtype: *id002
+    len: 1
+  preprocessed_summary:pegasus-cnndm:
+    block:
+      block_dir: blocks/140645734304016
+      block_index: preprocessed_summary:pegasus-cnndm
+      mmap: false
+    dtype: *id002
+    len: 1
+  preprocessed_summary:pegasus-xsum:
+    block:
+      block_dir: blocks/140645734304016
+      block_index: preprocessed_summary:pegasus-xsum
+      mmap: false
+    dtype: *id002
+    len: 1
+  preprocessed_summary:reference:
+    block:
+      block_dir: blocks/140645734304016
+      block_index: preprocessed_summary:reference
+      mmap: false
+    dtype: *id002
+    len: 1
+  spacy:document:
+    dtype: &id003 !!python/name:meerkat.columns.spacy_column.SpacyColumn ''
+    len: 1
+  spacy:summary:bart-cnndm:
+    dtype: *id003
+    len: 1
+  spacy:summary:bart-xsum:
+    dtype: *id003
+    len: 1
+  spacy:summary:pegasus-cnndm:
+    dtype: *id003
+    len: 1
+  spacy:summary:pegasus-xsum:
+    dtype: *id003
+    len: 1
+  spacy:summary:reference:
+    dtype: *id003
+    len: 1
+  summary:bart-cnndm:
+    block:
+      block_dir: blocks/140645734304016
+      block_index: summary:bart-cnndm
+      mmap: false
+    dtype: *id002
+    len: 1
+  summary:bart-xsum:
+    block:
+      block_dir: blocks/140645734304016
+      block_index: summary:bart-xsum
+      mmap: false
+    dtype: *id002
+    len: 1
+  summary:pegasus-cnndm:
+    block:
+      block_dir: blocks/140645734304016
+      block_index: summary:pegasus-cnndm
+      mmap: false
+    dtype: *id002
+    len: 1
+  summary:pegasus-xsum:
+    block:
+      block_dir: blocks/140645734304016
+      block_index: summary:pegasus-xsum
+      mmap: false
+    dtype: *id002
+    len: 1
+  summary:reference:
+    block:
+      block_dir: blocks/140645734304016
+      block_index: summary:reference
+      mmap: false
+    dtype: *id002
+    len: 1
+dtype: !!python/name:meerkat.block.manager.BlockManager ''

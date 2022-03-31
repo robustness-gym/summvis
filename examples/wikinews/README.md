@@ -1,0 +1,1 @@
+The [WikiNews example](https://en.wikinews.org/wiki/Argentina%27s_first_lady_launches_presidential_bid) was obtained under [Creative Commons 2.5](https://creativecommons.org/licenses/by/2.5/). Article metadata was removed and the body of the text was reformatted. The article headline serves as the summary.
