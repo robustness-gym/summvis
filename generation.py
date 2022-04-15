@@ -1,11 +1,13 @@
 """
 Script for decoding summarization models available through Huggingface Transformers.
 
-Usage with Huggingface Datasets:
-python generation.py --model <model name> --dataset <dataset name> --split <data split>
+To use with one of the 6 standard models:
+python generation.py --model <model abbreviation> --data_path <path to data in jsonl format>
+    where model abbreviation is one of: bart-xsum, bart-cnndm, pegasus-xsum, pegasus-cnndm, pegasus-newsroom,
+    pegasus-multinews:
 
-Usage with custom datasets in JSONL format:
-python generation.py --model <model name> --data_path <path to data in jsonl format>
+To use with arbitrary model:
+python generation.py --model_name_or_path <Huggingface model name or local path> --data_path <path to data in jsonl format>
 
 """
 # !/usr/bin/env python
@@ -64,24 +66,34 @@ def postprocess_data(decoded):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process some integers.')
-    parser.add_argument('--model', type=str, required=True,
-                        choices=['bart-xsum', 'bart-cnndm', 'pegasus-xsum', 'pegasus-cnndm', 'pegasus-newsroom',
-                                 'pegasus-multinews'])
+    parser.add_argument('--model', type=str)
+    parser.add_argument('--model_name_or_path', type=str)
     parser.add_argument('--data_path', type=str)
     args = parser.parse_args()
 
+    if not (args.model or args.model_name_or_path):
+        raise ValueError('Model is required')
+
+    if args.model and args.model_name_or_path:
+        raise ValueError('Specify model or model_name_or_path but not both')
+
     # Load models & data
-    model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_CHECKPOINTS[args.model]).to(DEVICE)
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_CHECKPOINTS[args.model])
+    if args.model:
+        model_name_or_path = MODEL_CHECKPOINTS[args.model]
+        file_model_name = args.model
+    else:
+        model_name_or_path = args.model_name_or_path
+        file_model_name = model_name_or_path.replace("/", "-")
+    model = AutoModelForSeq2SeqLM.from_pretrained(model_name_or_path).to(DEVICE)
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
 
     dataset = JSONDataset(args.data_path)
 
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE)
 
     # Write out dataset
-    model_name = args.model.replace("/", "-")
-    dataset_name = os.path.splitext(os.path.basename(args.data_path))[0]
-    filename = f'{model_name}.{dataset_name}.predictions'
+    file_dataset_name = os.path.splitext(os.path.basename(args.data_path))[0]
+    filename = f'{file_model_name}.{file_dataset_name}.predictions'
     fd_out = open(filename, 'w')
 
     model.eval()

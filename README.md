@@ -83,7 +83,7 @@ streamlit run summvis.py -- --path examples/wikinews/wikinews.cache
 
 ## Loading data into SummVis
 
-### If you have already generated summaries:
+### If you have generated summaries:
 
 The following steps describe how to load source documents and associated precomputed summaries into the SummVis tool.
 
@@ -158,11 +158,20 @@ python preprocessing.py \
 
 **2. Generate predictions**
 
+To use one of the **6 standard models** (`bart-xsum`, `bart-cnndm`, `pegasus-xsum`, `pegasus-cnndm`, `pegasus-newsroom`,
+    `pegasus-multinews`):
 ```shell
-python generation.py --model model_name --data_path path/to/jsonl_file
+python generation.py --model model_abbrev --data_path path/to/jsonl_file
 ```
+where `model` is one of the above 6 model codes.
 
-This will generate a prediction file named `<model_name>.<dataset_file_name>.predictions`
+To use an **any Huggingface model**:
+```shell
+python generation.py --model_name_or_path model_name_or_path --data_path path/to/jsonl_file
+```
+where `model_name_or_path` is the name of a Huggingface model or a local path.
+
+Either of the above two commands will generate a prediction file named `<model_name>.<dataset_file_name>.predictions`
 
 **3. Join one or more prediction files (from previous step) with original dataset**
 
